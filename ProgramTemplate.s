@@ -1,11 +1,11 @@
 ;*******************************************************************************
 ;@file				 Main.s
 ;@project		     Microprocessor Systems Term Project
-;@date
+;@31/01/2021
 ;
 ;@PROJECT GROUP
-;@groupno
-;@member1
+;@Group no: 41
+;@Muhammet Dervis Kopuz 504201531
 ;@member2
 ;@member3
 ;@member4
