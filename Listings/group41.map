@@ -1,0 +1,194 @@
+Component: ARM Compiler 6.14.1 Tool: armlink [5db06d00]
+
+==============================================================================
+
+Section Cross References
+
+    programtemplate.o(MAINFUNCTION) refers to programtemplate.o(GLOBAL_VARIABLES) for PROGRAM_STATUS
+    startup_armcm0plus.o(STACK) refers (Special) to heapauxi.o(.text) for __use_two_region_memory
+    startup_armcm0plus.o(HEAP) refers (Special) to heapauxi.o(.text) for __use_two_region_memory
+    startup_armcm0plus.o(RESET) refers (Special) to heapauxi.o(.text) for __use_two_region_memory
+    startup_armcm0plus.o(RESET) refers to startup_armcm0plus.o(STACK) for __initial_sp
+    startup_armcm0plus.o(RESET) refers to startup_armcm0plus.o(.text) for Reset_Handler
+    startup_armcm0plus.o(.text) refers (Special) to heapauxi.o(.text) for __use_two_region_memory
+    startup_armcm0plus.o(.text) refers to system_armcm0plus.o(.text.SystemInit) for SystemInit
+    startup_armcm0plus.o(.text) refers to programtemplate.o(MAINFUNCTION) for __main
+    system_armcm0plus.o(.text.SystemCoreClockUpdate) refers to system_armcm0plus.o(.data.SystemCoreClock) for SystemCoreClock
+    system_armcm0plus.o(.ARM.exidx.text.SystemCoreClockUpdate) refers to system_armcm0plus.o(.text.SystemCoreClockUpdate) for [Anonymous Symbol]
+    system_armcm0plus.o(.text.SystemInit) refers to system_armcm0plus.o(.data.SystemCoreClock) for SystemCoreClock
+    system_armcm0plus.o(.ARM.exidx.text.SystemInit) refers to system_armcm0plus.o(.text.SystemInit) for [Anonymous Symbol]
+
+
+==============================================================================
+
+Removing Unused input sections from the image.
+
+    Removing programtemplate.o(IN_DATA_AREA), (56 bytes).
+    Removing programtemplate.o(IN_DATA_FLAG_AREA), (56 bytes).
+    Removing programtemplate.o(ALLOCATION_TABLE), (80 bytes).
+    Removing programtemplate.o(DATA_AREA), (5120 bytes).
+    Removing programtemplate.o(ARRAY_AREA), (10240 bytes).
+    Removing startup_armcm0plus.o(HEAP), (3072 bytes).
+    Removing system_armcm0plus.o(.text), (0 bytes).
+    Removing system_armcm0plus.o(.text.SystemCoreClockUpdate), (16 bytes).
+    Removing system_armcm0plus.o(.ARM.exidx.text.SystemCoreClockUpdate), (8 bytes).
+    Removing system_armcm0plus.o(.ARM.exidx.text.SystemInit), (8 bytes).
+
+10 unused section(s) (total 18656 bytes) removed from the image.
+
+==============================================================================
+
+Image Symbol Table
+
+    Local Symbols
+
+    Symbol Name                              Value     Ov Type        Size  Object(Section)
+
+    ../ProgramTemplate.s                     0x00000000   Number         0  programtemplate.o ABSOLUTE
+    ../clib/heapaux.c                        0x00000000   Number         0  heapauxi.o ABSOLUTE
+    RTE/Device/ARMCM0P/startup_ARMCM0plus.s  0x00000000   Number         0  startup_armcm0plus.o ABSOLUTE
+    dc.s                                     0x00000000   Number         0  dc.o ABSOLUTE
+    system_ARMCM0plus.c                      0x00000000   Number         0  system_armcm0plus.o ABSOLUTE
+    RESET                                    0x00000000   Section      192  startup_armcm0plus.o(RESET)
+    .text                                    0x000000c0   Section       48  startup_armcm0plus.o(.text)
+    .text                                    0x000000f0   Section        0  heapauxi.o(.text)
+    [Anonymous Symbol]                       0x000000f8   Section        0  system_armcm0plus.o(.text.SystemInit)
+    __arm_cp.1_0                             0x00000100   Number         4  system_armcm0plus.o(.text.SystemInit)
+    __arm_cp.1_1                             0x00000104   Number         4  system_armcm0plus.o(.text.SystemInit)
+    MAINFUNCTION                             0x00000108   Section       72  programtemplate.o(MAINFUNCTION)
+    Clear_Alloc                              0x00000123   Thumb Code     0  programtemplate.o(MAINFUNCTION)
+    Clear_ErrorLogs                          0x00000123   Thumb Code     0  programtemplate.o(MAINFUNCTION)
+    Init_GlobVars                            0x00000123   Thumb Code    24  programtemplate.o(MAINFUNCTION)
+    SysTick_Init                             0x00000123   Thumb Code     0  programtemplate.o(MAINFUNCTION)
+    TICK_COUNT                               0x20000004   Data           4  programtemplate.o(GLOBAL_VARIABLES)
+    GLOBAL_VARIABLES                         0x20000004   Section       20  programtemplate.o(GLOBAL_VARIABLES)
+    FIRST_ELEMENT                            0x20000008   Data           4  programtemplate.o(GLOBAL_VARIABLES)
+    INDEX_INPUT_DS                           0x2000000c   Data           4  programtemplate.o(GLOBAL_VARIABLES)
+    INDEX_ERROR_LOG                          0x20000010   Data           4  programtemplate.o(GLOBAL_VARIABLES)
+    PROGRAM_STATUS                           0x20000014   Data           4  programtemplate.o(GLOBAL_VARIABLES)
+    STACK                                    0x20000018   Section     1024  startup_armcm0plus.o(STACK)
+
+    Global Symbols
+
+    Symbol Name                              Value     Ov Type        Size  Object(Section)
+
+    BuildAttributes$$THM_ISAv3M$S$PE$A:L22$X:L11$S22$IEEE1$IW$~IW$USESV6$~STKCKD$USESV7$~SHL$OTIME$ROPI$EBA8$STANDARDLIB$REQ8$PRES8$EABIv2 0x00000000   Number         0  anon$$obj.o ABSOLUTE
+    __Vectors                                0x00000000   Data           4  startup_armcm0plus.o(RESET)
+    Reset_Handler                            0x000000c1   Thumb Code     8  startup_armcm0plus.o(.text)
+    __Vectors_End                            0x000000c0   Data           0  startup_armcm0plus.o(RESET)
+    __Vectors_Size                           0x000000c0   Number         0  startup_armcm0plus.o ABSOLUTE
+    HardFault_Handler                        0x000000c9   Thumb Code     2  startup_armcm0plus.o(.text)
+    NMI_Handler                              0x000000cb   Thumb Code     2  startup_armcm0plus.o(.text)
+    SVC_Handler                              0x000000cd   Thumb Code     2  startup_armcm0plus.o(.text)
+    PendSV_Handler                           0x000000cf   Thumb Code     2  startup_armcm0plus.o(.text)
+    SysTick_Handler                          0x000000d1   Thumb Code     2  startup_armcm0plus.o(.text)
+    Interrupt0_Handler                       0x000000d3   Thumb Code     2  startup_armcm0plus.o(.text)
+    Interrupt1_Handler                       0x000000d5   Thumb Code     2  startup_armcm0plus.o(.text)
+    Interrupt2_Handler                       0x000000d7   Thumb Code     2  startup_armcm0plus.o(.text)
+    Interrupt3_Handler                       0x000000d9   Thumb Code     2  startup_armcm0plus.o(.text)
+    Interrupt4_Handler                       0x000000db   Thumb Code     2  startup_armcm0plus.o(.text)
+    Interrupt5_Handler                       0x000000dd   Thumb Code     2  startup_armcm0plus.o(.text)
+    Interrupt6_Handler                       0x000000df   Thumb Code     2  startup_armcm0plus.o(.text)
+    Interrupt7_Handler                       0x000000e1   Thumb Code     2  startup_armcm0plus.o(.text)
+    Interrupt8_Handler                       0x000000e3   Thumb Code     2  startup_armcm0plus.o(.text)
+    Interrupt9_Handler                       0x000000e5   Thumb Code     2  startup_armcm0plus.o(.text)
+    __use_two_region_memory                  0x000000f1   Thumb Code     2  heapauxi.o(.text)
+    __rt_heap_escrow$2region                 0x000000f3   Thumb Code     2  heapauxi.o(.text)
+    __rt_heap_expand$2region                 0x000000f5   Thumb Code     2  heapauxi.o(.text)
+    SystemInit                               0x000000f9   Thumb Code    16  system_armcm0plus.o(.text.SystemInit)
+    __main                                   0x00000109   Thumb Code    26  programtemplate.o(MAINFUNCTION)
+    SystemCoreClock                          0x20000000   Data           4  system_armcm0plus.o(.data.SystemCoreClock)
+    __stack_limit                            0x20000018   Data           0  startup_armcm0plus.o(STACK)
+    __initial_sp                             0x20000418   Data           0  startup_armcm0plus.o(STACK)
+
+
+
+==============================================================================
+
+Memory Map of the image
+
+  Image Entry point : 0x000000c1
+
+  Load Region LR_1 (Base: 0x00000000, Size: 0x00000168, Max: 0xffffffff, ABSOLUTE)
+
+    Execution Region ER_RO (Exec base: 0x00000000, Load base: 0x00000000, Size: 0x00000150, Max: 0xffffffff, ABSOLUTE)
+
+    Exec Addr    Load Addr    Size         Type   Attr      Idx    E Section Name        Object
+
+    0x00000000   0x00000000   0x000000c0   Data   RO           15    RESET               startup_armcm0plus.o
+    0x000000c0   0x000000c0   0x00000030   Code   RO           16  * .text               startup_armcm0plus.o
+    0x000000f0   0x000000f0   0x00000006   Code   RO           34    .text               c_p.l(heapauxi.o)
+    0x000000f6   0x000000f6   0x00000002   PAD
+    0x000000f8   0x000000f8   0x00000010   Code   RO           23    .text.SystemInit    system_armcm0plus.o
+    0x00000108   0x00000108   0x00000048   Code   RO            7  * MAINFUNCTION        programtemplate.o
+
+
+    Execution Region ER_RW (Exec base: 0x20000000, Load base: 0x00000150, Size: 0x00000018, Max: 0xffffffff, ABSOLUTE)
+
+    Exec Addr    Load Addr    Size         Type   Attr      Idx    E Section Name        Object
+
+    0x20000000   0x00000150   0x00000004   Data   RW           25    .data.SystemCoreClock  system_armcm0plus.o
+    0x20000004   0x00000154   0x00000014   Data   RW            3    GLOBAL_VARIABLES    programtemplate.o
+
+
+    Execution Region ER_ZI (Exec base: 0x20000018, Load base: 0x00000168, Size: 0x00000400, Max: 0xffffffff, ABSOLUTE)
+
+    Exec Addr    Load Addr    Size         Type   Attr      Idx    E Section Name        Object
+
+    0x20000018        -       0x00000400   Zero   RW           13    STACK               startup_armcm0plus.o
+
+
+==============================================================================
+
+Image component sizes
+
+
+      Code (inc. data)   RO Data    RW Data    ZI Data      Debug   Object Name
+
+        72         22          0         20          0        392   programtemplate.o
+        48         10        192          0       1024        992   startup_armcm0plus.o
+        16          8          0          4          0        656   system_armcm0plus.o
+
+    ----------------------------------------------------------------------
+       136         40        192         24       1024       2040   Object Totals
+         0          0          0          0          0          0   (incl. Generated)
+         0          0          0          0          0          0   (incl. Padding)
+
+    ----------------------------------------------------------------------
+
+      Code (inc. data)   RO Data    RW Data    ZI Data      Debug   Library Member Name
+
+         6          0          0          0          0        136   heapauxi.o
+
+    ----------------------------------------------------------------------
+         8          0          0          0          0        136   Library Totals
+         2          0          0          0          0          0   (incl. Padding)
+
+    ----------------------------------------------------------------------
+
+      Code (inc. data)   RO Data    RW Data    ZI Data      Debug   Library Name
+
+         6          0          0          0          0        136   c_p.l
+
+    ----------------------------------------------------------------------
+         8          0          0          0          0        136   Library Totals
+
+    ----------------------------------------------------------------------
+
+==============================================================================
+
+
+      Code (inc. data)   RO Data    RW Data    ZI Data      Debug   
+
+       144         40        192         24       1024       2124   Grand Totals
+       144         40        192         24       1024       2124   ELF Image Totals
+       144         40        192         24          0          0   ROM Totals
+
+==============================================================================
+
+    Total RO  Size (Code + RO Data)                  336 (   0.33kB)
+    Total RW  Size (RW Data + ZI Data)              1048 (   1.02kB)
+    Total ROM Size (Code + RO Data + RW Data)        360 (   0.35kB)
+
+==============================================================================
+
