@@ -150,7 +150,6 @@ __LOG_END
 				ALIGN 
 __main			FUNCTION
 				EXPORT __main
-				LDR	r0,=AT_MEM
 				BL	Clear_Alloc					; Call Clear Allocation Function.
 				BL  Clear_ErrorLogs				; Call Clear ErrorLogs Function.
 				BL	Init_GlobVars				; Call Initiate Global Variable Function.
@@ -173,8 +172,18 @@ STOP			B	STOP						; Infinite loop.
 
 ;@brief 	This function will be used for System Tick Handler
 SysTick_Handler	FUNCTION			
-;//-------- <<< USER CODE BEGIN System Tick Handler >>> ----------------------															
+;//-------- <<< USER CODE BEGIN System Tick Handler >>> ----------------------	
+				EXPORT	SysTick_Handler
 				
+				;increase tick count
+				LDR		r0,=TICK_COUNT					;load tick count address
+				LDR		r1,[r0]							;load tick count value to r1
+				ADDS	r1,#1							;increase tick count by 1
+				STR		r1,[r0]							;Store new tick count value
+				
+				;read input data
+				
+				BX 		LR
 ;//-------- <<< USER CODE END System Tick Handler >>> ------------------------				
 				ENDFUNC
 
@@ -182,14 +191,21 @@ SysTick_Handler	FUNCTION
 
 ;@brief 	This function will be used to initiate System Tick Handler
 SysTick_Init	FUNCTION			
-;//-------- <<< USER CODE BEGIN System Tick Timer Initialize >>> ----------------------															
+;//-------- <<< USER CODE BEGIN System Tick Timer Initialize >>> ----------------------							
 				LDR		r0,=0xE000E010					;Load SysTick control and status register address
 				LDR		r1,=3336						;Load the reload value to r1 register
 				STR 	r1,[r0,#4]						;Store reload value to reload value register
 				MOVS	r1,#0							;assign 0 to r1 register
 				STR		r1,[r0,#8]						;clear current value register
-;yapicakmiyiz?		MOVS	r1,#7							;set enable,clock,and interrupt flags
-;111(7) mi olmali	STR		r1,[r0]							;Store r1 value to SystickCSR register
+				MOVS	r1,#7							;set enable,clock,and interrupt flags
+				STR		r1,[r0]							;Store r1 value to SystickCSR register
+				
+				;update program status
+				LDR		r0,=PROGRAM_STATUS				;load program status address
+				MOVS	r1,#1							;load r1 with timer started info
+				STR		r1,[r0]							;Change program status to 1
+				
+				BX 		LR								;return with LR
 				
 				;DEVAMI OLMALI
 				
