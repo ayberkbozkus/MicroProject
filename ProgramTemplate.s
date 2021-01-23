@@ -150,7 +150,6 @@ __LOG_END
 				ALIGN 
 __main			FUNCTION
 				EXPORT __main
-				LDR 	r0,=IN_DATA
 				BL	Clear_Alloc					; Call Clear Allocation Function.
 				BL  Clear_ErrorLogs				; Call Clear ErrorLogs Function.
 				BL	Init_GlobVars				; Call Initiate Global Variable Function.
