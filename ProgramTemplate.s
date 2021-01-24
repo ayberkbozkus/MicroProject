@@ -150,8 +150,6 @@ __LOG_END
 				ALIGN 
 __main			FUNCTION
 				EXPORT __main
-					LDR	r2,=AT_MEM
-					LDR r3,=DATA_MEM
 				BL	Clear_Alloc					; Call Clear Allocation Function.
 				BL  Clear_ErrorLogs				; Call Clear ErrorLogs Function.
 				BL	Init_GlobVars				; Call Initiate Global Variable Function.
@@ -209,8 +207,6 @@ SysTick_Init	FUNCTION
 				
 				BX 		LR								;return with LR
 				
-				;DEVAMI OLMALI
-				
 ;//-------- <<< USER CODE END System Tick Timer Initialize >>> ------------------------				
 				ENDFUNC
 
@@ -219,6 +215,19 @@ SysTick_Init	FUNCTION
 ;@brief 	This function will be used to stop the System Tick Timer
 SysTick_Stop	FUNCTION			
 ;//-------- <<< USER CODE BEGIN System Tick Timer Stop >>> ----------------------	
+				LDR		r0,=0xE000E010					;Load SysTick control and status register address
+				MOVS	r1,#0							;set enable,clock,and interrupt flags
+				STR		r1,[r0]							;Store r1 value to SystickCSR register
+				MOVS	r1,#0							;assign 0 to r1 register
+				STR		r1,[r0,#8]						;clear current value register and count flag
+				
+				;update program status
+				LDR		r0,=PROGRAM_STATUS				;load program status address
+				LDR		r1,=FINISHED					;load r1 with finished info
+				STR		r1,[r0]							;Change program status to 1
+				
+				BX 		LR								;return with LR
+				
 				
 ;//-------- <<< USER CODE END System Tick Timer Stop >>> ------------------------				
 				ENDFUNC
