@@ -150,6 +150,8 @@ __LOG_END
 				ALIGN 
 __main			FUNCTION
 				EXPORT __main
+					LDR	r2,=AT_MEM
+					LDR r3,=DATA_MEM
 				BL	Clear_Alloc					; Call Clear Allocation Function.
 				BL  Clear_ErrorLogs				; Call Clear ErrorLogs Function.
 				BL	Init_GlobVars				; Call Initiate Global Variable Function.
@@ -202,7 +204,7 @@ SysTick_Init	FUNCTION
 				
 				;update program status
 				LDR		r0,=PROGRAM_STATUS				;load program status address
-				MOVS	r1,#1							;load r1 with timer started info
+				LDR		r1,=TIMER_START					;load r1 with timer started info
 				STR		r1,[r0]							;Change program status to 1
 				
 				BX 		LR								;return with LR
@@ -226,6 +228,22 @@ SysTick_Stop	FUNCTION
 ;@brief 	This function will be used to clear allocation table
 Clear_Alloc		FUNCTION			
 ;//-------- <<< USER CODE BEGIN Clear Allocation Table Function >>> ----------------------															
+				LDR		r0,=AT_MEM							;Load AT memory address
+				LDR		r1,=NUMBER_OF_AT					;Load number of allocation table to r1
+				MOVS	r2,#0								;assign 0 to r2 for clearing
+				MOVS	r3,#0								;assign 0 to r3 for counting loops(i)
+C_A_LOOP		CMP		r3,r1								;check if i>Number of allocations
+				BGE		C_A_END								;branch to end of clear allocation
+				PUSH	{r3}								;push r3 to stack
+				LSLS	r3,#2								;multiply r3 by 4
+				STR		r2,[r0,r3]							;clear allocation node
+				POP		{r3}								;get r3 back from stack
+				ADDS	r3,r3,#1							;increase r3 by 1
+				B		C_A_LOOP							;branch to next iteration
+				
+			
+C_A_END			BX 		LR									;return with LR
+				
 				
 ;//-------- <<< USER CODE END Clear Allocation Table Function >>> ------------------------				
 				ENDFUNC
@@ -235,6 +253,25 @@ Clear_Alloc		FUNCTION
 ;@brief 	This function will be used to clear error log array
 Clear_ErrorLogs	FUNCTION			
 ;//-------- <<< USER CODE BEGIN Clear Error Logs Function >>> ----------------------															
+				LDR		r0,=LOG_MEM							;Load log memory address
+				LDR		r1,=NUMBER_OF_AT					;Load number of allocation table to r1
+				MOVS	r2,#32								;assign 32 to r2, there is 32 cells
+				MULS	r1,r2,r1							;multiply r1 by 32
+				MOVS	r2,#3								;assign 3 to r2, each cell has 3 words
+				MULS	r1,r2,r1							;multiply r1 by 3
+				MOVS	r2,#0								;assign 0 to r2 for clearing
+				MOVS	r3,#0								;assign 0 to r3 for counting loops(i)
+C_E_LOOP		CMP		r3,r1								;check if i>log size
+				BGE		C_E_END								;branch to end of clearing logs
+				PUSH	{r3}								;push r3 to stack
+				LSLS	r3,#2								;multiply r3 by 4
+				STR		r2,[r0,r3]							;clear allocation node
+				POP		{r3}								;get r3 back from stack
+				ADDS	r3,r3,#1							;increase r3 by 1
+				B		C_E_LOOP							;branch to next iteration
+				
+C_E_END			BX		LR									;Return with LR
+				
 				
 ;//-------- <<< USER CODE END Clear Error Logs Function >>> ------------------------				
 				ENDFUNC
