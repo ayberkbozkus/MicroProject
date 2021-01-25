@@ -6,7 +6,7 @@
 ;@PROJECT GROUP
 ;@Group no: 41
 ;@Muhammet Dervis Kopuz 504201531
-;@member2
+;@Ayberk Bozkış 150160067
 ;@member3
 ;@member4
 ;@member5
