@@ -368,7 +368,7 @@ BITEMPTY 		PUSH 	{r0}							;push r0 to stack
 				ADDS	r0,r3,r4						;get the data address to return
 				
 				POP		{r1,r2,r3,r4,r5}				;Pop r1,r2,r3,r4,r5 registers from stack
-				BX 		LR								;Return with LR
+				BX 	LR									;Return with LR
 				
 				
 ;//-------- <<< USER CODE END System Tick Handler >>> ------------------------				
@@ -392,21 +392,34 @@ Free			FUNCTION
 Insert			FUNCTION			
 ;//-------- <<< USER CODE BEGIN Insert Function >>> ----------------------			
 				MOVS	r1,r0						;load the data to insert to r1 register
+				;PUSH	{LR}
 				BL		Malloc						;Get allocated area address in r0
 				
+				;POP		{PC}
 				LDR		r2,=FIRST_ELEMENT			;load FIRST_ELEMENT address
-				LDR		r2,[r2]						;load FIRST_ELEMENT value
-				CMP		r2,#0						;check if FIRST_ELEMENT is empty/ Linked list is empty
+				LDR		r3,[r2]						;load FIRST_ELEMENT value = r3
+				CMP		r3,#0						;check if FIRST_ELEMENT is empty/ Linked list is empty
 				BEQ		FIRST_EL					;if LL is empty branch to inserting first element
 				;if it is not first element continue
-				CMP		r1,r2						;check if data<LL element
+				CMP		r1,r3						;check if data<LL element
+				BEQ		EQUAL_ERROR					;data=LL element, write error
+				BLO		ADD_TO_FRONT				;data<LL element add to front of LL element
+				BHI		NEXT_EL						;data>LL element, compara with next LL element
 				
 				
+ADD_TO_FRONT	STR		r1,[r0]						;store new data in the allocated address from malloc
+				ADDS	r0,r0,#4					;add 4 to r0 to get new pointer's address
+				STR		r2,[r0]						;new pointer = FIRST_ELEMENT pointer 
 				
 FIRST_EL		STR		r1,[r0]						;store the data in the allocated address from malloc
 				ADDS	r0,r0,#4					;add 4 to r0 to get pointer's address
 				MOVS	r2,#0						;assign 0 to r2
 				STR		r2,[r0]						;first element pointer = NULL
+				
+				BX		LR									;Return with LR
+				
+NEXT_EL			B		EQUAL_ERROR
+EQUAL_ERROR		B		NEXT_EL	
 				
 				BX		LR									;Return with LR
 ;//-------- <<< USER CODE END Insert Function >>> ------------------------				
