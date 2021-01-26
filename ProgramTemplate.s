@@ -182,8 +182,21 @@ SysTick_Handler	FUNCTION
 				STR		r1,[r0]							;Store new tick count value
 				
 				;read input data
+				LDR		r0,=IN_DATA						;Load address of input array
+				LDR		r1,=INDEX_INPUT_DS				;load INDEX_INPUT_DS address
+				LDR		r1,[r1]							;load INDEX_INPUT_DS value
+				LSLS	r1,#2							;Multiply index by 4 to get array index
+				LDR		r0,[r0,r1]						;read the data from input dataset with the corresponding index
+				LDR		r1,=IN_DATA_FLAG				;load address of input array
+				LDR		r1,[r1]							;Read data flag from data_flag array
+				CMP		r1,#REMOVE						;check if operation = REMOVE
+				BEQ		Remove							;branch to remove function
+				CMP		r1,#INSERT						;check if operation = INSERT
+				BEQ		Insert							;branch to insert function
+				CMP		r1,#TRANSFORM					;check if operation = TRANSFORM to array
+				BEQ		LinkedList2Arr					;branch to LinkedList2Arr function
 				
-				BX 		LR
+				BX 		LR								;Return with LR
 ;//-------- <<< USER CODE END System Tick Handler >>> ------------------------				
 				ENDFUNC
 
@@ -224,7 +237,7 @@ SysTick_Stop	FUNCTION
 				;update program status
 				LDR		r0,=PROGRAM_STATUS				;load program status address
 				LDR		r1,=FINISHED					;load r1 with finished info
-				STR		r1,[r0]							;Change program status to 1
+				STR		r1,[r0]							;Change program status to 2
 				
 				BX 		LR								;return with LR
 				
@@ -313,6 +326,50 @@ Init_GlobVars	FUNCTION
 ;@return 	R0 <- The allocated area address
 Malloc			FUNCTION			
 ;//-------- <<< USER CODE BEGIN System Tick Handler >>> ----------------------	
+				PUSH	{r1,r2,r3,r4,r5}				;Push r1,r2,r3,r4,r5 registers to stack
+				MOVS	r0,#0							;index for AT_MEM
+				MOVS	r1,#2_1							;r1 = 1, binary
+				LDR		r2,=AT_MEM						;r2 = allocation table,alloc
+				MOVS	r5,#0							;n th bit in AT,index
+				MOVS	r4,#0							;byte index
+CHECKBIT		PUSH	{r0}							;push r0 to stack
+				LSLS	r0,#2							;multiply r0 by 8
+				LDR		r3,[r2,r0]						;load AT_MEM[i]
+				POP		{r0}							;push r0 to stack
+				CMP		r4,#8							;if byteIndex == 8
+				BEQ		NEXTBYTE						;Branch to next byte
+				ANDS	r3,r3,r1						;Bitwise and operation to find if the bit is 0 or 1
+				CMP		r3,r1							;if r3 == binary, bit =1 
+				BEQ		LSHIFT							;branch to Lshift to check if next bit is empty
+				B 		BITEMPTY						;branch to BITEMPTY, we found the empty bit
+				
+				
+LSHIFT			LSLS	r1,#4							;left shift binary by 1
+				ADDS	r4,r4,#1						;increase byte index by 1
+				ADDS	r5,r5,#1						;increase index by 1
+				B		CHECKBIT						;Go to CHECKBIT branch
+				
+NEXTBYTE		ADDS	r0,r0,#1						;increase r0 by 1
+				MOVS	r1,#1							;binary = 1
+				MOVS	r4,#0							;byteindex = 0
+				B		CHECKBIT						;Go to CHECKBIT branch
+				
+BITEMPTY 		PUSH 	{r0}							;push r0 to stack
+				LSLS	r0,#2							;multiply r0 by 4
+				LDR		r3,[r2,r0]						;load corresponding byte
+				POP		{r0}							;get r0 back from stack
+				ORRS	r3,r1							;bitwise or operation to make the 0 bit 1
+				MOVS	r1,#4							;assign 4 to r1
+				MULS	r0,r1,r0						;multiply byte index by 4 to get byte address
+				STR		r3,[r2,r0]						;make 0 bit 1					
+				MOVS	r4,#8							;Multiply index by 8 to get corresponding data slot, 2 words = 8 bits
+				MULS	r4,r5,r4						;multiply index by 8
+				LDR		r3,=DATA_MEM					;Load Data memory to r3
+				ADDS	r0,r3,r4						;get the data address to return
+				
+				POP		{r1,r2,r3,r4,r5}				;Pop r1,r2,r3,r4,r5 registers from stack
+				BX 		LR								;Return with LR
+				
 				
 ;//-------- <<< USER CODE END System Tick Handler >>> ------------------------				
 				ENDFUNC
@@ -333,8 +390,20 @@ Free			FUNCTION
 ;@param		R0 <- The data to insert
 ;@return    R0 <- Error Code
 Insert			FUNCTION			
-;//-------- <<< USER CODE BEGIN Insert Function >>> ----------------------															
+;//-------- <<< USER CODE BEGIN Insert Function >>> ----------------------			
+				MOVS	r1,r0						;load the data to insert to r1 register
+				BL		Malloc						;Get allocated area address in r0
 				
+				LDR		r2,=FIRST_ELEMENT			;load FIRST_ELEMENT address
+				LDR		r2,[r2]						;load FIRST_ELEMENT value
+				CMP		r2,#0						;check if FIRST_ELEMENT is empty/ Linked list is empty
+				BEQ		FIRST_EL					;if LL is empty branch to inserting first element
+				
+				
+				
+FIRST_EL		STR		r1,[r0]						;store the data in the allocated address from malloc
+				
+				BX		LR									;Return with LR
 ;//-------- <<< USER CODE END Insert Function >>> ------------------------				
 				ENDFUNC
 				
@@ -345,7 +414,7 @@ Insert			FUNCTION
 ;@return    R0 <- Error Code
 Remove			FUNCTION			
 ;//-------- <<< USER CODE BEGIN Remove Function >>> ----------------------															
-				
+				BX		LR									;Return with LR
 ;//-------- <<< USER CODE END Remove Function >>> ------------------------				
 				ENDFUNC
 				
@@ -355,6 +424,8 @@ Remove			FUNCTION
 ;@return	R0 <- Error Code
 LinkedList2Arr	FUNCTION			
 ;//-------- <<< USER CODE BEGIN Linked List To Array >>> ----------------------															
+				BX		LR									;Return with LR
+
 
 ;//-------- <<< USER CODE END Linked List To Array >>> ------------------------				
 				ENDFUNC
