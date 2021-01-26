@@ -402,6 +402,9 @@ Insert			FUNCTION
 				
 				
 FIRST_EL		STR		r1,[r0]						;store the data in the allocated address from malloc
+				ADDS	r0,r0,#4					;add 4 to r0 to get pointer's address
+				MOVS	r2,#0						;assign 0 to r2
+				STR		r2,[r0]						;first element pointer = NULL
 				
 				BX		LR									;Return with LR
 ;//-------- <<< USER CODE END Insert Function >>> ------------------------				
