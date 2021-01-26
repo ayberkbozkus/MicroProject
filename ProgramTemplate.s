@@ -398,6 +398,8 @@ Insert			FUNCTION
 				LDR		r2,[r2]						;load FIRST_ELEMENT value
 				CMP		r2,#0						;check if FIRST_ELEMENT is empty/ Linked list is empty
 				BEQ		FIRST_EL					;if LL is empty branch to inserting first element
+				;if it is not first element continue
+				CMP		r1,r2						;check if data<LL element
 				
 				
 				
