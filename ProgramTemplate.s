@@ -201,7 +201,8 @@ SysTick_Handler	FUNCTION
 				CMP		r2,#TRANSFORM					;check if operation = TRANSFORM to array
 				BEQ		LinkedList2Arr					;branch to LinkedList2Arr function
 				
-Inserter		BL		Insert
+Inserter		B		Insert
+InserterEnd		BX		LR
 				
 				BX 		LR								;Return with LR
 ;//-------- <<< USER CODE END System Tick Handler >>> ------------------------				
@@ -376,7 +377,9 @@ BITEMPTY 		PUSH 	{r0}							;push r0 to stack
 				ADDS	r0,r3,r4						;get the data address to return
 				
 				POP		{r1,r2,r3,r4,r5}				;Pop r1,r2,r3,r4,r5 registers from stack
-				BX 		LR									;Return with LR
+				
+				B		MallocEnd
+				;BX 		LR									;Return with LR
 				
 				
 ;//-------- <<< USER CODE END System Tick Handler >>> ------------------------				
@@ -402,10 +405,12 @@ Insert			FUNCTION
 				MOVS	r1,r0						;load the data to insert to r1 register
 				;MOV		r5,lr
 				B		Malloc						;Get allocated area address in r0
-				
+MallocEnd						
 				;POP		{LR}
 				LDR		r2,=FIRST_ELEMENT			;load FIRST_ELEMENT address
-				LDR		r3,[r2,#0]						;load FIRST_ELEMENT value = r3
+				LDR		r3,[r2,#0]						;load the address in FIRST_ELEMENT
+				;MOVS	r2,#0
+				;LDR		r3,[r3,#0]						;load first element value
 				CMP		r3,#0						;check if FIRST_ELEMENT is empty/ Linked list is empty
 				BEQ		FIRST_EL					;if LL is empty branch to inserting first element
 				;if it is not first element continue
@@ -428,8 +433,8 @@ FIRST_EL		STR		r1,[r0]						;store the data in the allocated address from malloc
 				
 				
 				
-				
-				BX		LR											;Return with LR
+				B		InserterEnd
+				;BX		LR											;Return with LR
 				
 NEXT_EL			B		EQUAL_ERROR
 EQUAL_ERROR		B		NEXT_EL	
