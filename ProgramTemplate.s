@@ -252,7 +252,8 @@ Clear_Alloc		FUNCTION
 ;//-------- <<< USER CODE BEGIN Clear Allocation Table Function >>> ----------------------															
 				LDR		r0,=AT_MEM							;Load AT memory address
 				LDR		r1,=NUMBER_OF_AT					;Load number of allocation table to r1
-				MOVS	r2,#0								;assign 0 to r2 for clearing
+				;MOVS	r2,#0								;assign 0 to r2 for clearing
+				LDR		r2,=0x11111101
 				MOVS	r3,#0								;assign 0 to r3 for counting loops(i)
 C_A_LOOP		CMP		r3,r1								;check if i>Number of allocations
 				BGE		C_A_END								;branch to end of clear allocation
@@ -393,9 +394,10 @@ Insert			FUNCTION
 ;//-------- <<< USER CODE BEGIN Insert Function >>> ----------------------			
 				MOVS	r1,r0						;load the data to insert to r1 register
 				;PUSH	{LR}
+				;POP		{r5}
 				BL		Malloc						;Get allocated area address in r0
 				
-				;POP		{PC}
+				;POP		{LR}
 				LDR		r2,=FIRST_ELEMENT			;load FIRST_ELEMENT address
 				LDR		r3,[r2]						;load FIRST_ELEMENT value = r3
 				CMP		r3,#0						;check if FIRST_ELEMENT is empty/ Linked list is empty
