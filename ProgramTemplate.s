@@ -415,13 +415,14 @@ MallocEnd		LDR		r2,=FIRST_ELEMENT			;load FIRST_ELEMENT address
 				CMP		r3,#0						;check if FIRST_ELEMENT is empty/ Linked list is empty
 				BEQ		FIRST_EL					;if LL is empty branch to inserting first element
 				;if it is not first element continue
-				LDR		r3,[r3]						;Load the value of the address in FIRST_ELEMENT
-				CMP		r1,r3						;check if data<LL element
+				MOVS	r4,r3						;Load element pointer in r4
+				LDR		r3,[r3]						;Load element value
+				CMP		r1,r3						;check if new data<LL element
 				BEQ		EQUAL_ERROR					;data=LL element, write error
 				BLO		ADD_TO_FRONT				;data<LL element add to front of LL element
-				BHI		NEXT_EL						;data>LL element, compara with next LL element
-				
-				
+				BHI		NEXT_EL						;data>LL element, compare with next LL element
+			
+
 ADD_TO_FRONT	;STR		r1,[r0]					;store new data in the allocated address from malloc
 				ADDS	r0,r0,#4					;add 4 to r0 to get new pointer's address
 				STR		r2,[r0]						;new pointer = FIRST_ELEMENT pointer 
@@ -442,7 +443,7 @@ NEXT_EL			;STR		r1,[r0]					;store new data in the allocated address from malloc
 				LDR		r3,[r3]						;Load prev Elements pointer value
 				CMP		r3,#0						;if pointer = 0, add to tail
 				BEQ		ADD_TO_TAIL					;branch to add to tail operation
-				ADDS	r3,r3,#4					;add 4 to get next elements pointer
+				;ADDS	r3,r3,#4					;add 4 to get next elements pointer
 				LDR		r3,[r3]						;load number value in address
 				CMP		r1,r3						;check if newData < prevData
 				BLO		ADD_BW						;if newData<prevData add between two elements
