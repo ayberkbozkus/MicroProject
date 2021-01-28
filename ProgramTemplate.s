@@ -424,8 +424,9 @@ MallocEnd		LDR		r2,=FIRST_ELEMENT			;load FIRST_ELEMENT address
 			
 
 ADD_TO_FRONT	;STR		r1,[r0]					;store new data in the allocated address from malloc
+				STR		r0,[r2]						;store new data address in FIRST_ELEMENT
 				ADDS	r0,r0,#4					;add 4 to r0 to get new pointer's address
-				STR		r2,[r0]						;new pointer = FIRST_ELEMENT pointer 
+				STR		r3,[r0]						;new pointer = FIRST_ELEMENT pointer 
 				POP		{PC}					;		InserterEnd
 				
 FIRST_EL		;STR		r1,[r0]					;store the data in the allocated address from malloc
