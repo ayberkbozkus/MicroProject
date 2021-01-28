@@ -195,8 +195,9 @@ SysTick_Handler	FUNCTION
 				STR		r1,[r3]							;store new INDEX_INPUT_DS value
 				CMP		r2,#INSERT						;check if operation = REMOVE
 				BL		Insert
-				CMP		r2,#INSERT
+				CMP		r2,#REMOVE
 				BL		Remove
+				CMP		r2,#TRANSFORM
 				BL		LinkedList2Arr
 				;BLO		Remove							;branch to remove function
 				;CMP		r2,#INSERT						;check if operation = INSERT
@@ -435,13 +436,30 @@ FIRST_EL		;STR		r1,[r0]					;store the data in the allocated address from malloc
 				BX		LR											;Return with LR
 				
 NEXT_EL			;STR		r1,[r0]					;store new data in the allocated address from malloc
-				LDR		r3,[r2]						;Load next elements pointer address to r1
+				LDR		r3,[r2]						;Load next elements pointer address to r3
 				ADDS	r3,r3,#4					;add4 to get prev elements pointer
-				LDR		r4,[r3]						;Load prev Elements pointer value
-				CMP		r4,#0						;if pointer = 0, add to tail
+				MOVS	r4,r3						;copy r3 in r4
+				LDR		r3,[r3]						;Load prev Elements pointer value
+				CMP		r3,#0						;if pointer = 0, add to tail
 				BEQ		ADD_TO_TAIL					;branch to add to tail operation
+				ADDS	r3,r3,#4					;add 4 to get next elements pointer
+				LDR		r3,[r3]						;load number value in address
+				CMP		r1,r3						;check if newData < prevData
+				BLO		ADD_BW						;if newData<prevData add between two elements
+				BHI		NEXT_EL						;if newData>prevData check next element
 	
-ADD_TO_TAIL		STR		r0,[r3]						;store new data's address in prev pointer
+ADD_BW			PUSH	{r0}
+				SUBS	r0,r0,#12					;Decrease current pointer by 12 to get first elements pointer address
+				MOVS	r3,r0
+				POP		{r0}
+				STR		r3,[r0,#4]					;store first elements pointer in third elements pointer
+				STR		r0,[r3]						;store newData address in first elements pointer
+				;SUBS	r3,r0,#8					;decrase current point by 8 to get third elements pointer
+				;ADDS	r0,r0,#4					;;add 4 to r0 to get pointer's address
+				
+				BX		LR	
+	
+ADD_TO_TAIL		STR		r0,[r4]						;store new data's address in prev pointer
 				ADDS	r0,r0,#4					;add 4 to r0 to get pointer's address
 				MOVS	r3,#0						;assign 0 to r2
 				STR		r3,[r0]						;new elements pointer = NULL
@@ -460,7 +478,7 @@ EQUAL_ERROR		B		NEXT_EL
 ;@return    R0 <- Error Code
 Remove			FUNCTION			
 ;//-------- <<< USER CODE BEGIN Remove Function >>> ----------------------															
-				BLO		continueR
+				BEQ		continueR
 				BX		LR
 continueR		BX		LR									;Return with LR
 ;//-------- <<< USER CODE END Remove Function >>> ------------------------				
@@ -472,7 +490,7 @@ continueR		BX		LR									;Return with LR
 ;@return	R0 <- Error Code
 LinkedList2Arr	FUNCTION			
 ;//-------- <<< USER CODE BEGIN Linked List To Array >>> ----------------------															
-				BHI		continueL
+				BEQ		continueL
 				BX		LR
 continueL		BX		LR									;Return with LR
 
