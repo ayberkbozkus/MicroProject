@@ -174,7 +174,7 @@ STOP			B	STOP						; Infinite loop.
 SysTick_Handler	FUNCTION			
 ;//-------- <<< USER CODE BEGIN System Tick Handler >>> ----------------------	
 				EXPORT	SysTick_Handler
-				
+				PUSH	{LR}
 				;increase tick count
 				LDR		r0,=TICK_COUNT					;load tick count address
 				LDR		r1,[r0]							;load tick count value to r1
@@ -183,20 +183,32 @@ SysTick_Handler	FUNCTION
 				
 				;read input data
 				LDR		r0,=IN_DATA						;Load address of input array
-				LDR		r1,=INDEX_INPUT_DS				;load INDEX_INPUT_DS address
-				LDR		r1,[r1]							;load INDEX_INPUT_DS value
+				LDR		r3,=INDEX_INPUT_DS				;load INDEX_INPUT_DS address
+				LDR		r1,[r3]							;load INDEX_INPUT_DS value
+				PUSH	{r1}							;push INDEX_INPUT_DS value to stack
 				LSLS	r1,#2							;Multiply index by 4 to get array index
 				LDR		r0,[r0,r1]						;read the data from input dataset with the corresponding index
-				LDR		r1,=IN_DATA_FLAG				;load address of input array
-				LDR		r1,[r1]							;Read data flag from data_flag array
-				CMP		r1,#REMOVE						;check if operation = REMOVE
-				BEQ		Remove							;branch to remove function
-				CMP		r1,#INSERT						;check if operation = INSERT
-				BEQ		Insert							;branch to insert function
-				CMP		r1,#TRANSFORM					;check if operation = TRANSFORM to array
-				BEQ		LinkedList2Arr					;branch to LinkedList2Arr function
+				LDR		r2,=IN_DATA_FLAG				;load address of input array
+				LDR		r2,[r2,r1]						;Read data flag from data_flag array
+				POP		{r1}							;pop INDEX_INPUT_DS value from stack
+				ADDS	r1,r1,#1						;increase INDEX_INPUT_DS value by one
+				STR		r1,[r3]							;store new INDEX_INPUT_DS value
+				CMP		r2,#INSERT						;check if operation = REMOVE
+				BL		Insert
+				CMP		r2,#REMOVE
+				BL		Remove
+				CMP		r2,#TRANSFORM
+				BL		LinkedList2Arr
+				;BLO		Remove							;branch to remove function
+				;CMP		r2,#INSERT						;check if operation = INSERT
+				;BEQ		Inserter						;branch to insert function
+				;CMP		r2,#TRANSFORM					;check if operation = TRANSFORM to array
+				;BHI		LinkedList2Arr					;branch to LinkedList2Arr function
 				
-				BX 		LR								;Return with LR
+;Inserter		BL		Insert
+;InserterEnd		;BX		LR
+				POP		{PC}
+				;BX 		LR								;Return with LR
 ;//-------- <<< USER CODE END System Tick Handler >>> ------------------------				
 				ENDFUNC
 
@@ -253,6 +265,7 @@ Clear_Alloc		FUNCTION
 				LDR		r0,=AT_MEM							;Load AT memory address
 				LDR		r1,=NUMBER_OF_AT					;Load number of allocation table to r1
 				MOVS	r2,#0								;assign 0 to r2 for clearing
+				;LDR		r2,=0x11111101
 				MOVS	r3,#0								;assign 0 to r3 for counting loops(i)
 C_A_LOOP		CMP		r3,r1								;check if i>Number of allocations
 				BGE		C_A_END								;branch to end of clear allocation
@@ -341,8 +354,7 @@ CHECKBIT		PUSH	{r0}							;push r0 to stack
 				ANDS	r3,r3,r1						;Bitwise and operation to find if the bit is 0 or 1
 				CMP		r3,r1							;if r3 == binary, bit =1 
 				BEQ		LSHIFT							;branch to Lshift to check if next bit is empty
-				B 		BITEMPTY						;branch to BITEMPTY, we found the empty bit
-				
+				B 		BITEMPTY						;branch to BITEMPTY, we found the empty bit	
 				
 LSHIFT			LSLS	r1,#4							;left shift binary by 1
 				ADDS	r4,r4,#1						;increase byte index by 1
@@ -367,8 +379,9 @@ BITEMPTY 		PUSH 	{r0}							;push r0 to stack
 				LDR		r3,=DATA_MEM					;Load Data memory to r3
 				ADDS	r0,r3,r4						;get the data address to return
 				
-				POP		{r1,r2,r3,r4,r5}				;Pop r1,r2,r3,r4,r5 registers from stack
-				BX 		LR								;Return with LR
+				POP		{r1,r2,r3,r4,r5}				;Pop r1,r2,r3,r4,r5 registers from stack				
+				B		MallocEnd
+				;BX 		LR									;Return with LR
 				
 				
 ;//-------- <<< USER CODE END System Tick Handler >>> ------------------------				
@@ -391,19 +404,76 @@ Free			FUNCTION
 ;@return    R0 <- Error Code
 Insert			FUNCTION			
 ;//-------- <<< USER CODE BEGIN Insert Function >>> ----------------------			
-				MOVS	r1,r0						;load the data to insert to r1 register
-				BL		Malloc						;Get allocated area address in r0
+				BEQ		continueI
+				BX 		LR
 				
-				LDR		r2,=FIRST_ELEMENT			;load FIRST_ELEMENT address
-				LDR		r2,[r2]						;load FIRST_ELEMENT value
-				CMP		r2,#0						;check if FIRST_ELEMENT is empty/ Linked list is empty
+continueI		MOVS	r1,r0						;load the data to insert to r1 register
+				B		Malloc						;Get allocated area address in r0					
+MallocEnd		LDR		r2,=FIRST_ELEMENT			;load FIRST_ELEMENT address
+				LDR		r3,[r2,#0]					;load the address in FIRST_ELEMENT
+				STR		r1,[r0]						;store the data in the allocated address from malloc
+				CMP		r3,#0						;check if FIRST_ELEMENT is empty/ Linked list is empty
 				BEQ		FIRST_EL					;if LL is empty branch to inserting first element
+				;if it is not first element continue
+				MOVS	r4,r3						;Load element pointer in r4
+				LDR		r4,[r3]						;Load element value
+				CMP		r1,r4						;check if new data<LL element
+				BEQ		EQUAL_ERROR					;data=LL element, write error
+				BLO		ADD_TO_FRONT				;data<LL element add to front of LL element
+				BHI		NEXT_EL						;data>LL element, compare with next LL element
+			
+
+ADD_TO_FRONT	;STR		r1,[r0]					;store new data in the allocated address from malloc
+				ADDS	r0,r0,#4					;add 4 to r0 to get new pointer's address
+				STR		r2,[r0]						;new pointer = FIRST_ELEMENT pointer 
+				POP		{PC}					;		InserterEnd
 				
+FIRST_EL		;STR		r1,[r0]					;store the data in the allocated address from malloc
+				STR		r0,[r2]						;store new data address in FIRST_ELEMENT's value
+				ADDS	r0,r0,#4					;add 4 to r0 to get pointer's address
+				MOVS	r3,#0						;assign 0 to r2
+				STR		r3,[r0]						;first element pointer = NULL
+				;B		InserterEnd
+				BX		LR											;Return with LR
 				
+NEXT_EL			;STR		r1,[r0]					;store new data in the allocated address from malloc
+				LDR		r3,[r2]						;Load elements address
+				ADDS	r3,r3,#4					;get elements pointer
+				MOVS	r4,r3						;copy element pointer in r4
+				MOVS	r5,r4
+				LDR		r3,[r3]						;Load next element/Elements pointer value
+ITERATE			CMP		r3,#0						;if next element = 0, add to tail
+				BEQ		ADD_TO_TAIL					;branch to add to tail operation
+				LDR		r3,[r3]						;load next element's value
+				CMP		r1,r3						;check if newData < prevData
+				BLO		ADD_BW						;if newData<prevData add between two elements
+				;BHI		NEXT_EL						;if newData>prevData check next element
+				MOVS	r5,r4
+				LDR		r4,[r4]
+				MOVS	r3,r4						;turn r3 value in to address
+				ADDS	r4,r4,#4
+				B 		ITERATE
+	
+ADD_BW			;PUSH	{r0}
+				;SUBS	r0,r0,#12					;Decrease current pointer by 12 to get first elements pointer address
+				;MOVS	r3,r0
+				MOVS	r3,r5
+				;POP		{r0}
+				PUSH	{r3}
+				LDR		r3,[r3]
+				STR		r3,[r0,#4]					;store first elements pointer in third elements pointer
+				POP		{r3}
+				STR		r0,[r3]						;store newData address in first elements pointer
+				BX		LR	
+	
+ADD_TO_TAIL		STR		r0,[r5]						;store new data's address in element's pointer
+				MOVS	r3,#0						;assign 0 to r3
+				STR		r3,[r0,#4]					;new data's pointer = NULL
+				BX		LR
 				
-FIRST_EL		STR		r1,[r0]						;store the data in the allocated address from malloc
+EQUAL_ERROR		B		NEXT_EL	
 				
-				BX		LR									;Return with LR
+				;BX		r5									;Return with LR
 ;//-------- <<< USER CODE END Insert Function >>> ------------------------				
 				ENDFUNC
 				
@@ -414,7 +484,9 @@ FIRST_EL		STR		r1,[r0]						;store the data in the allocated address from malloc
 ;@return    R0 <- Error Code
 Remove			FUNCTION			
 ;//-------- <<< USER CODE BEGIN Remove Function >>> ----------------------															
-				BX		LR									;Return with LR
+				BEQ		continueR
+				BX		LR
+continueR		BX		LR									;Return with LR
 ;//-------- <<< USER CODE END Remove Function >>> ------------------------				
 				ENDFUNC
 				
@@ -424,7 +496,9 @@ Remove			FUNCTION
 ;@return	R0 <- Error Code
 LinkedList2Arr	FUNCTION			
 ;//-------- <<< USER CODE BEGIN Linked List To Array >>> ----------------------															
-				BX		LR									;Return with LR
+				BEQ		continueL
+				BX		LR
+continueL		BX		LR									;Return with LR
 
 
 ;//-------- <<< USER CODE END Linked List To Array >>> ------------------------				
