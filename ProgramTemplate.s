@@ -174,7 +174,7 @@ STOP			B	STOP						; Infinite loop.
 SysTick_Handler	FUNCTION			
 ;//-------- <<< USER CODE BEGIN System Tick Handler >>> ----------------------	
 				EXPORT	SysTick_Handler
-				
+				PUSH	{LR}
 				;increase tick count
 				LDR		r0,=TICK_COUNT					;load tick count address
 				LDR		r1,[r0]							;load tick count value to r1
@@ -193,18 +193,21 @@ SysTick_Handler	FUNCTION
 				POP		{r1}							;pop INDEX_INPUT_DS value from stack
 				ADDS	r1,r1,#1						;increase INDEX_INPUT_DS value by one
 				STR		r1,[r3]							;store new INDEX_INPUT_DS value
-				;BL		Malloc	
-				CMP		r2,#REMOVE						;check if operation = REMOVE
-				BEQ		Remove							;branch to remove function
-				CMP		r2,#INSERT						;check if operation = INSERT
-				BEQ		Inserter							;branch to insert function
-				CMP		r2,#TRANSFORM					;check if operation = TRANSFORM to array
-				BEQ		LinkedList2Arr					;branch to LinkedList2Arr function
+				CMP		r2,#INSERT						;check if operation = REMOVE
+				BL		Insert
+				CMP		r2,#INSERT
+				BL		Remove
+				BL		LinkedList2Arr
+				;BLO		Remove							;branch to remove function
+				;CMP		r2,#INSERT						;check if operation = INSERT
+				;BEQ		Inserter						;branch to insert function
+				;CMP		r2,#TRANSFORM					;check if operation = TRANSFORM to array
+				;BHI		LinkedList2Arr					;branch to LinkedList2Arr function
 				
-Inserter		B		Insert
-InserterEnd		BX		LR
-				
-				BX 		LR								;Return with LR
+;Inserter		BL		Insert
+;InserterEnd		;BX		LR
+				POP		{PC}
+				;BX 		LR								;Return with LR
 ;//-------- <<< USER CODE END System Tick Handler >>> ------------------------				
 				ENDFUNC
 
@@ -350,8 +353,7 @@ CHECKBIT		PUSH	{r0}							;push r0 to stack
 				ANDS	r3,r3,r1						;Bitwise and operation to find if the bit is 0 or 1
 				CMP		r3,r1							;if r3 == binary, bit =1 
 				BEQ		LSHIFT							;branch to Lshift to check if next bit is empty
-				B 		BITEMPTY						;branch to BITEMPTY, we found the empty bit
-				
+				B 		BITEMPTY						;branch to BITEMPTY, we found the empty bit	
 				
 LSHIFT			LSLS	r1,#4							;left shift binary by 1
 				ADDS	r4,r4,#1						;increase byte index by 1
@@ -376,8 +378,7 @@ BITEMPTY 		PUSH 	{r0}							;push r0 to stack
 				LDR		r3,=DATA_MEM					;Load Data memory to r3
 				ADDS	r0,r3,r4						;get the data address to return
 				
-				POP		{r1,r2,r3,r4,r5}				;Pop r1,r2,r3,r4,r5 registers from stack
-				
+				POP		{r1,r2,r3,r4,r5}				;Pop r1,r2,r3,r4,r5 registers from stack				
 				B		MallocEnd
 				;BX 		LR									;Return with LR
 				
@@ -402,41 +403,50 @@ Free			FUNCTION
 ;@return    R0 <- Error Code
 Insert			FUNCTION			
 ;//-------- <<< USER CODE BEGIN Insert Function >>> ----------------------			
-				MOVS	r1,r0						;load the data to insert to r1 register
-				;MOV		r5,lr
-				B		Malloc						;Get allocated area address in r0
-MallocEnd						
-				;POP		{LR}
-				LDR		r2,=FIRST_ELEMENT			;load FIRST_ELEMENT address
-				LDR		r3,[r2,#0]						;load the address in FIRST_ELEMENT
-				;MOVS	r2,#0
-				;LDR		r3,[r3,#0]						;load first element value
+				BEQ		continueI
+				BX 		LR
+				
+continueI		MOVS	r1,r0						;load the data to insert to r1 register
+				B		Malloc						;Get allocated area address in r0					
+MallocEnd		LDR		r2,=FIRST_ELEMENT			;load FIRST_ELEMENT address
+				LDR		r3,[r2,#0]					;load the address in FIRST_ELEMENT
+				STR		r1,[r0]						;store the data in the allocated address from malloc
 				CMP		r3,#0						;check if FIRST_ELEMENT is empty/ Linked list is empty
 				BEQ		FIRST_EL					;if LL is empty branch to inserting first element
 				;if it is not first element continue
+				LDR		r3,[r3]						;Load the value of the address in FIRST_ELEMENT
 				CMP		r1,r3						;check if data<LL element
 				BEQ		EQUAL_ERROR					;data=LL element, write error
 				BLO		ADD_TO_FRONT				;data<LL element add to front of LL element
 				BHI		NEXT_EL						;data>LL element, compara with next LL element
 				
 				
-ADD_TO_FRONT	STR		r1,[r0]						;store new data in the allocated address from malloc
+ADD_TO_FRONT	;STR		r1,[r0]					;store new data in the allocated address from malloc
 				ADDS	r0,r0,#4					;add 4 to r0 to get new pointer's address
 				STR		r2,[r0]						;new pointer = FIRST_ELEMENT pointer 
+				POP		{PC}					;		InserterEnd
 				
-FIRST_EL		STR		r1,[r0]						;store the data in the allocated address from malloc
+FIRST_EL		;STR		r1,[r0]					;store the data in the allocated address from malloc
 				STR		r0,[r2]						;store new data address in FIRST_ELEMENT's value
 				ADDS	r0,r0,#4					;add 4 to r0 to get pointer's address
 				MOVS	r3,#0						;assign 0 to r2
 				STR		r3,[r0]						;first element pointer = NULL
-				;STR		r1,[r2]
+				;B		InserterEnd
+				BX		LR											;Return with LR
 				
+NEXT_EL			;STR		r1,[r0]					;store new data in the allocated address from malloc
+				LDR		r3,[r2]						;Load next elements pointer address to r1
+				ADDS	r3,r3,#4					;add4 to get prev elements pointer
+				LDR		r4,[r3]						;Load prev Elements pointer value
+				CMP		r4,#0						;if pointer = 0, add to tail
+				BEQ		ADD_TO_TAIL					;branch to add to tail operation
+	
+ADD_TO_TAIL		STR		r0,[r3]						;store new data's address in prev pointer
+				ADDS	r0,r0,#4					;add 4 to r0 to get pointer's address
+				MOVS	r3,#0						;assign 0 to r2
+				STR		r3,[r0]						;new elements pointer = NULL
+				BX		LR
 				
-				
-				B		InserterEnd
-				;BX		LR											;Return with LR
-				
-NEXT_EL			B		EQUAL_ERROR
 EQUAL_ERROR		B		NEXT_EL	
 				
 				;BX		r5									;Return with LR
@@ -450,7 +460,9 @@ EQUAL_ERROR		B		NEXT_EL
 ;@return    R0 <- Error Code
 Remove			FUNCTION			
 ;//-------- <<< USER CODE BEGIN Remove Function >>> ----------------------															
-				BX		LR									;Return with LR
+				BLO		continueR
+				BX		LR
+continueR		BX		LR									;Return with LR
 ;//-------- <<< USER CODE END Remove Function >>> ------------------------				
 				ENDFUNC
 				
@@ -460,7 +472,9 @@ Remove			FUNCTION
 ;@return	R0 <- Error Code
 LinkedList2Arr	FUNCTION			
 ;//-------- <<< USER CODE BEGIN Linked List To Array >>> ----------------------															
-				BX		LR									;Return with LR
+				BHI		continueL
+				BX		LR
+continueL		BX		LR									;Return with LR
 
 
 ;//-------- <<< USER CODE END Linked List To Array >>> ------------------------				
