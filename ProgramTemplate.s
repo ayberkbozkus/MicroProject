@@ -416,8 +416,8 @@ MallocEnd		LDR		r2,=FIRST_ELEMENT			;load FIRST_ELEMENT address
 				BEQ		FIRST_EL					;if LL is empty branch to inserting first element
 				;if it is not first element continue
 				MOVS	r4,r3						;Load element pointer in r4
-				LDR		r3,[r3]						;Load element value
-				CMP		r1,r3						;check if new data<LL element
+				LDR		r4,[r3]						;Load element value
+				CMP		r1,r4						;check if new data<LL element
 				BEQ		EQUAL_ERROR					;data=LL element, write error
 				BLO		ADD_TO_FRONT				;data<LL element add to front of LL element
 				BHI		NEXT_EL						;data>LL element, compare with next LL element
@@ -437,33 +437,38 @@ FIRST_EL		;STR		r1,[r0]					;store the data in the allocated address from malloc
 				BX		LR											;Return with LR
 				
 NEXT_EL			;STR		r1,[r0]					;store new data in the allocated address from malloc
-				LDR		r3,[r2]						;Load next elements pointer address to r3
-				ADDS	r3,r3,#4					;add4 to get prev elements pointer
-				MOVS	r4,r3						;copy r3 in r4
-				LDR		r3,[r3]						;Load prev Elements pointer value
-				CMP		r3,#0						;if pointer = 0, add to tail
+				LDR		r3,[r2]						;Load elements address
+				ADDS	r3,r3,#4					;get elements pointer
+				MOVS	r4,r3						;copy element pointer in r4
+				MOVS	r5,r4
+				LDR		r3,[r3]						;Load next element/Elements pointer value
+ITERATE			CMP		r3,#0						;if next element = 0, add to tail
 				BEQ		ADD_TO_TAIL					;branch to add to tail operation
-				;ADDS	r3,r3,#4					;add 4 to get next elements pointer
-				LDR		r3,[r3]						;load number value in address
+				LDR		r3,[r3]						;load next element's value
 				CMP		r1,r3						;check if newData < prevData
 				BLO		ADD_BW						;if newData<prevData add between two elements
-				BHI		NEXT_EL						;if newData>prevData check next element
+				;BHI		NEXT_EL						;if newData>prevData check next element
+				MOVS	r5,r4
+				LDR		r4,[r4]
+				MOVS	r3,r4						;turn r3 value in to address
+				ADDS	r4,r4,#4
+				B 		ITERATE
 	
-ADD_BW			PUSH	{r0}
-				SUBS	r0,r0,#12					;Decrease current pointer by 12 to get first elements pointer address
-				MOVS	r3,r0
-				POP		{r0}
+ADD_BW			;PUSH	{r0}
+				;SUBS	r0,r0,#12					;Decrease current pointer by 12 to get first elements pointer address
+				;MOVS	r3,r0
+				MOVS	r3,r5
+				;POP		{r0}
+				PUSH	{r3}
+				LDR		r3,[r3]
 				STR		r3,[r0,#4]					;store first elements pointer in third elements pointer
+				POP		{r3}
 				STR		r0,[r3]						;store newData address in first elements pointer
-				;SUBS	r3,r0,#8					;decrase current point by 8 to get third elements pointer
-				;ADDS	r0,r0,#4					;;add 4 to r0 to get pointer's address
-				
 				BX		LR	
 	
-ADD_TO_TAIL		STR		r0,[r4]						;store new data's address in prev pointer
-				ADDS	r0,r0,#4					;add 4 to r0 to get pointer's address
-				MOVS	r3,#0						;assign 0 to r2
-				STR		r3,[r0]						;new elements pointer = NULL
+ADD_TO_TAIL		STR		r0,[r5]						;store new data's address in element's pointer
+				MOVS	r3,#0						;assign 0 to r3
+				STR		r3,[r0,#4]					;new data's pointer = NULL
 				BX		LR
 				
 EQUAL_ERROR		B		NEXT_EL	
