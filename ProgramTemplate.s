@@ -182,23 +182,39 @@ SysTick_Handler	FUNCTION
 				STR		r1,[r0]							;Store new tick count value
 				
 				;read input data
-				LDR		r0,=IN_DATA						;Load address of input array
-				LDR		r3,=INDEX_INPUT_DS				;load INDEX_INPUT_DS address
-				LDR		r1,[r3]							;load INDEX_INPUT_DS value
-				PUSH	{r1}							;push INDEX_INPUT_DS value to stack
-				LSLS	r1,#2							;Multiply index by 4 to get array index
-				LDR		r0,[r0,r1]						;read the data from input dataset with the corresponding index
+				LDR		r3,=IN_DATA						;Load address of input array
+				LDR		r1,=INDEX_INPUT_DS				;load INDEX_INPUT_DS address
+				LDR		r0,[r1]							;load INDEX_INPUT_DS value
+				PUSH	{r0}							;push INDEX_INPUT_DS value to stack
+				LSLS	r0,#2							;Multiply index by 4 to get array index
+				LDR		r3,[r3,r0]						;read the data from input dataset with the corresponding index
 				LDR		r2,=IN_DATA_FLAG				;load address of input array
-				LDR		r2,[r2,r1]						;Read data flag from data_flag array
-				POP		{r1}							;pop INDEX_INPUT_DS value from stack
-				ADDS	r1,r1,#1						;increase INDEX_INPUT_DS value by one
-				STR		r1,[r3]							;store new INDEX_INPUT_DS value
+				LDR		r2,[r2,r0]						;Read data flag from data_flag array
+				POP		{r0}							;pop INDEX_INPUT_DS value from stack
+				
+				PUSH	{r0}							;push INDEX_INPUT_DS value to stack
+				PUSH	{r1}							;push INDEX_INPUT_DS value to stack
+				PUSH	{r2}							;push INDEX_INPUT_DS value to stack
+				PUSH	{r3}							;push INDEX_INPUT_DS value to stack
 				CMP		r2,#INSERT						;check if operation = REMOVE
 				BL		Insert
 				CMP		r2,#REMOVE
 				BL		Remove
 				CMP		r2,#TRANSFORM
 				BL		LinkedList2Arr
+				
+				
+				POP		{r3}							;push INDEX_INPUT_DS value to stack
+				POP		{r2}							;push INDEX_INPUT_DS value to stack
+				POP		{r1}							;push INDEX_INPUT_DS value to stack
+				POP		{r0}							;push INDEX_INPUT_DS value to stack
+				BL		WriteErrorLog
+				
+				; Increase index here ;
+				ADDS	r0,r0,#1						;increase INDEX_INPUT_DS value by one
+				STR		r0,[r1]							;store new INDEX_INPUT_DS value
+				
+				
 				;BLO		Remove							;branch to remove function
 				;CMP		r2,#INSERT						;check if operation = INSERT
 				;BEQ		Inserter						;branch to insert function
@@ -517,10 +533,10 @@ WriteErrorLog	FUNCTION
 				LDR		r4,=LOG_MEM							;Load log memory address
 				
 				;Bu kisim parametrelerin kaydedilmesini test etmek amaçli yazildi ileride silinecek
-				LDR		r0,=0x55FF							;Temp value to store
-				LDR		r1,=0x7EF							;Temp value to store
-				LDR		r2,=0x5F							;Temp value to store
-				LDR		r3,=0x1AC							;Temp value to store
+				;LDR		r0,=0x55FF							;Temp value to store
+				;LDR		r1,=0x7EF							;Temp value to store
+				;LDR		r2,=0x5F							;Temp value to store
+				;LDR		r3,=0x1AC							;Temp value to store
 				;silinecek test kisminin sonu
 				
 				LDR		r5,=INDEX_ERROR_LOG					;Load address of INDEX_ERROR_LOG
@@ -534,23 +550,30 @@ WriteErrorLog	FUNCTION
 				STR		r3,[r4,r5]							;Store @param3 to Err_log
 				ADDS	r5,r5,#4							;increase index
 				
-				;Getnow henüz yazilmadigi için r6 ya sabit deger yaziliyor
-				;BL 	GetNow								;Call GetNow() to store timestamp in r6
-				LDR		r6,=0x10							;Temporary GetNow() value stored insdie r6 
-				STR		r6,[r4,r5]							;
+				PUSH 	{LR} 								;Save LR content to stack
+				BL 		GetNow								;Call GetNow() to store timestamp in r6
+				STR		r6,[r4,r5]							;Store @param4 to Err_log
 				ADDS	r5,r5,#4							;increase index
 				
 				LDR		r7,=INDEX_ERROR_LOG					;Load address of INDEX_ERROR_LOG
-				STR		r5,[r7]								;Store new index value to INDEX_ERROR_LOG			
-				BX		LR									;Return with LR
+				STR		r5,[r7]								;Store new index value to INDEX_ERROR_LOG
+				POP 	{PC}								;Use stacked LR content to return to functionA
+				
 ;//-------- <<< USER CODE END Write Error Log >>> ------------------------				
 				ENDFUNC
 				
 ;@brief 	This function will be used to get working time of the System Tick timer
 ;@return	R0 <- Working time of the System Tick Timer (in us).			
 GetNow			FUNCTION			
-;//-------- <<< USER CODE BEGIN Get Now >>> ----------------------															
-				
+;//-------- <<< USER CODE BEGIN Get Now >>> ----------------------
+				PUSH 	{LR}
+				PUSH	{r0}
+				LDR		r0,=0xE000E010					;Load SysTick control and status register address
+				LDR		r0,[r0]							;Load SysTick control and status register address
+				LDR		r1,=TICK_COUNT
+				SUBS	r6,r1,r0						;save value to r6
+				POP		{r0}
+				POP 	{PC} 							; Use stacked LR content to return to functionA
 ;//-------- <<< USER CODE END Get Now >>> ------------------------
 				ENDFUNC
 				
