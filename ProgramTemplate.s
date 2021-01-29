@@ -513,8 +513,36 @@ continueL		BX		LR									;Return with LR
 ;@param     R2 -> Operation (Insertion / Deletion / LinkedList2Array)
 ;@param     R3 -> Data
 WriteErrorLog	FUNCTION			
-;//-------- <<< USER CODE BEGIN Write Error Log >>> ----------------------															
+;//-------- <<< USER CODE BEGIN Write Error Log >>> ----------------------
+				LDR		r4,=LOG_MEM							;Load log memory address
 				
+				;Bu kisim parametrelerin kaydedilmesini test etmek amaçli yazildi ileride silinecek
+				LDR		r0,=0x55FF							;Temp value to store
+				LDR		r1,=0x7EF							;Temp value to store
+				LDR		r2,=0x5F							;Temp value to store
+				LDR		r3,=0x1AC							;Temp value to store
+				;silinecek test kisminin sonu
+				
+				LDR		r5,=INDEX_ERROR_LOG					;Load address of INDEX_ERROR_LOG
+				LDR		r5,[r5]								;Load value of INDEX_ERROR_LOG
+				STR		r0,[r4,r5]							;Store @param0 to Err_log
+				ADDS	r5,r5,#4							;increase index
+				STR		r1,[r4,r5]							;Store @param1 to Err_log
+				ADDS	r5,r5,#4							;increase index
+				STR		r2,[r4,r5]							;Store @param2 to Err_log
+				ADDS	r5,r5,#4							;increase index
+				STR		r3,[r4,r5]							;Store @param3 to Err_log
+				ADDS	r5,r5,#4							;increase index
+				
+				;Getnow henüz yazilmadigi için r6 ya sabit deger yaziliyor
+				;BL 	GetNow								;Call GetNow() to store timestamp in r6
+				LDR		r6,=0x10							;Temporary GetNow() value stored insdie r6 
+				STR		r6,[r4,r5]							;
+				ADDS	r5,r5,#4							;increase index
+				
+				LDR		r7,=INDEX_ERROR_LOG					;Load address of INDEX_ERROR_LOG
+				STR		r5,[r7]								;Store new index value to INDEX_ERROR_LOG			
+				BX		LR									;Return with LR
 ;//-------- <<< USER CODE END Write Error Log >>> ------------------------				
 				ENDFUNC
 				
