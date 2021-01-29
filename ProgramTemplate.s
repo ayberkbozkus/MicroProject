@@ -426,6 +426,7 @@ FIRST_EL		STR		r0,[r2]						;store new data address in FIRST_ELEMENT's value
 				ADDS	r0,r0,#4					;add 4 to r0 to get pointer's address
 				MOVS	r3,#0						;assign 0 to r2
 				STR		r3,[r0]						;first element pointer = NULL
+				LDR		r0,=NO_ERROR				;Return no error error code 
 				BX		LR							;Return with LR
 				
 NEXT_EL			LDR		r3,[r2]						;Load elements address
@@ -450,15 +451,20 @@ ADD_BW			MOVS	r3,r5						;copy the address in r5 to r3
 				STR		r3,[r0,#4]					;store first elements pointer in third elements pointer
 				POP		{r3}						;get r3 value back from stack
 				STR		r0,[r3]						;store newData address in first elements pointer
+				LDR		r0,=NO_ERROR				;Return no error error code 
 				BX		LR							;return with lr
 	
 ADD_TO_TAIL		STR		r0,[r5]						;store new data's address in element's pointer
 				MOVS	r3,#0						;assign 0 to r3
 				STR		r3,[r0,#4]					;new data's pointer = NULL
+				LDR		r0,=NO_ERROR				;Return no error error code 
 				BX		LR							;return with LR
 				
-EQUAL_ERROR		B		NEXT_EL						;Use this to return error for logging
+EQUAL_ERROR		LDR		r0,=DUPLICATE_DATA			;Return duplicate data error code 
+				BX		LR							;return with lr
 				;burada loglamaya baglanti yapilacak
+				
+				;Error code 1 icin gelistirme yap
 				
 ;//-------- <<< USER CODE END Insert Function >>> ------------------------				
 				ENDFUNC
