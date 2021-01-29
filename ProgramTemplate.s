@@ -193,22 +193,16 @@ SysTick_Handler	FUNCTION
 				POP		{r1}							;pop INDEX_INPUT_DS value from stack
 				ADDS	r1,r1,#1						;increase INDEX_INPUT_DS value by one
 				STR		r1,[r3]							;store new INDEX_INPUT_DS value
-				CMP		r2,#INSERT						;check if operation = REMOVE
-				BL		Insert
-				CMP		r2,#REMOVE
-				BL		Remove
-				CMP		r2,#TRANSFORM
-				BL		LinkedList2Arr
-				;BLO		Remove							;branch to remove function
-				;CMP		r2,#INSERT						;check if operation = INSERT
-				;BEQ		Inserter						;branch to insert function
-				;CMP		r2,#TRANSFORM					;check if operation = TRANSFORM to array
-				;BHI		LinkedList2Arr					;branch to LinkedList2Arr function
+				CMP		r2,#INSERT						;check if operation = INSERT
+				BL		Insert							;Branch with link to insert function
+				CMP		r2,#REMOVE						;check if operation = REMOVE
+				BL		Remove							;Branch with link to remove function
+				CMP		r2,#TRANSFORM					;check if operation = TRANSFORM
+				BL		LinkedList2Arr					;Branch with link to LinkedList2Arr function
 				
-;Inserter		BL		Insert
-;InserterEnd		;BX		LR
-				POP		{PC}
-				;BX 		LR								;Return with LR
+				
+				POP		{PC}							;pop pc to exit systickhandler
+				;BX 		LR							;Return with LR
 ;//-------- <<< USER CODE END System Tick Handler >>> ------------------------				
 				ENDFUNC
 
@@ -380,7 +374,7 @@ BITEMPTY 		PUSH 	{r0}							;push r0 to stack
 				ADDS	r0,r3,r4						;get the data address to return
 				
 				POP		{r1,r2,r3,r4,r5}				;Pop r1,r2,r3,r4,r5 registers from stack				
-				B		MallocEnd
+				B		MallocEnd						;Branch to MallocEnd line
 				;BX 		LR									;Return with LR
 				
 				
@@ -404,8 +398,8 @@ Free			FUNCTION
 ;@return    R0 <- Error Code
 Insert			FUNCTION			
 ;//-------- <<< USER CODE BEGIN Insert Function >>> ----------------------			
-				BEQ		continueI
-				BX 		LR
+				BEQ		continueI					;If the operation is insert branch to ContinueI
+				BX 		LR							;else return with LR
 				
 continueI		MOVS	r1,r0						;load the data to insert to r1 register
 				B		Malloc						;Get allocated area address in r0					
@@ -423,58 +417,49 @@ MallocEnd		LDR		r2,=FIRST_ELEMENT			;load FIRST_ELEMENT address
 				BHI		NEXT_EL						;data>LL element, compare with next LL element
 			
 
-ADD_TO_FRONT	;STR		r1,[r0]					;store new data in the allocated address from malloc
-				STR		r0,[r2]						;store new data address in FIRST_ELEMENT
+ADD_TO_FRONT	STR		r0,[r2]						;store new data address in FIRST_ELEMENT
 				ADDS	r0,r0,#4					;add 4 to r0 to get new pointer's address
 				STR		r3,[r0]						;new pointer = FIRST_ELEMENT pointer 
-				POP		{PC}					;		InserterEnd
+				POP		{PC}						;Return
 				
-FIRST_EL		;STR		r1,[r0]					;store the data in the allocated address from malloc
-				STR		r0,[r2]						;store new data address in FIRST_ELEMENT's value
+FIRST_EL		STR		r0,[r2]						;store new data address in FIRST_ELEMENT's value
 				ADDS	r0,r0,#4					;add 4 to r0 to get pointer's address
 				MOVS	r3,#0						;assign 0 to r2
 				STR		r3,[r0]						;first element pointer = NULL
-				;B		InserterEnd
-				BX		LR											;Return with LR
+				BX		LR							;Return with LR
 				
-NEXT_EL			;STR		r1,[r0]					;store new data in the allocated address from malloc
-				LDR		r3,[r2]						;Load elements address
+NEXT_EL			LDR		r3,[r2]						;Load elements address
 				ADDS	r3,r3,#4					;get elements pointer
 				MOVS	r4,r3						;copy element pointer in r4
-				MOVS	r5,r4
+				MOVS	r5,r4						;copy element pointer in r5
 				LDR		r3,[r3]						;Load next element/Elements pointer value
 ITERATE			CMP		r3,#0						;if next element = 0, add to tail
 				BEQ		ADD_TO_TAIL					;branch to add to tail operation
 				LDR		r3,[r3]						;load next element's value
 				CMP		r1,r3						;check if newData < prevData
 				BLO		ADD_BW						;if newData<prevData add between two elements
-				;BHI		NEXT_EL						;if newData>prevData check next element
-				MOVS	r5,r4
-				LDR		r4,[r4]
-				MOVS	r3,r4						;turn r3 value in to address
-				ADDS	r4,r4,#4
-				B 		ITERATE
+				MOVS	r5,r4						;use r4 to store the address in r4
+				LDR		r4,[r4]						;load the value in r4 register
+				MOVS	r3,r4						;copy value in r4 to r3
+				ADDS	r4,r4,#4					;increase r4 to get next address
+				B 		ITERATE						;Branch to ITERATE
 	
-ADD_BW			;PUSH	{r0}
-				;SUBS	r0,r0,#12					;Decrease current pointer by 12 to get first elements pointer address
-				;MOVS	r3,r0
-				MOVS	r3,r5
-				;POP		{r0}
-				PUSH	{r3}
-				LDR		r3,[r3]
+ADD_BW			MOVS	r3,r5						;copy the address in r5 to r3
+				PUSH	{r3}						;push r3 value to stack
+				LDR		r3,[r3]						;laod the value in r3 register
 				STR		r3,[r0,#4]					;store first elements pointer in third elements pointer
-				POP		{r3}
+				POP		{r3}						;get r3 value back from stack
 				STR		r0,[r3]						;store newData address in first elements pointer
-				BX		LR	
+				BX		LR							;return with lr
 	
 ADD_TO_TAIL		STR		r0,[r5]						;store new data's address in element's pointer
 				MOVS	r3,#0						;assign 0 to r3
 				STR		r3,[r0,#4]					;new data's pointer = NULL
-				BX		LR
+				BX		LR							;return with LR
 				
-EQUAL_ERROR		B		NEXT_EL	
+EQUAL_ERROR		B		NEXT_EL						;Use this to return error for logging
+				;burada loglamaya baglanti yapilacak
 				
-				;BX		r5									;Return with LR
 ;//-------- <<< USER CODE END Insert Function >>> ------------------------				
 				ENDFUNC
 				
@@ -485,8 +470,8 @@ EQUAL_ERROR		B		NEXT_EL
 ;@return    R0 <- Error Code
 Remove			FUNCTION			
 ;//-------- <<< USER CODE BEGIN Remove Function >>> ----------------------															
-				BEQ		continueR
-				BX		LR
+				BEQ		continueR		;if operation = Removebranch to ContinueR
+				BX		LR				;else return with lr
 continueR		
 				;LDR 	R2,=DATA_MEM	;load data memory start adress to r2
 				LDR		R2,=FIRST_ELEMENT
@@ -559,9 +544,9 @@ DELFIRST		PUSH {R6}
 ;@return	R0 <- Error Code
 LinkedList2Arr	FUNCTION			
 ;//-------- <<< USER CODE BEGIN Linked List To Array >>> ----------------------															
-				BEQ		continueL
-				BX		LR
-				
+				BEQ		continueL					;if operation = LinkedList2Arr branch to ContinueL
+				BX		LR							;else return with lr
+
 continueL		LDR r0, =FIRST_ELEMENT 				;r0 holds the first element in linked list
 				LDR r2, =ARRAY_MEM					;r2 holds the starting address of array
 				
