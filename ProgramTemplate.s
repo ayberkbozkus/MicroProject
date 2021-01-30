@@ -406,6 +406,14 @@ LL_FULL			MOVS	r0,#0							;assign 0 to r0 since LL is full
 ;@param		R0 <- Address to deallocate
 Free			FUNCTION			
 ;//-------- <<< USER CODE BEGIN Free Function >>> ----------------------
+				LDR		r1,=DATA_MEM				;Load the start address of the data memory
+				LDR		r0,=0x20002874
+				SUBS	r0,r0,r1					;DATA_MEM start - Address to deallocate
+				LSRS	r0,#3						;divide by 8 to get n th element
+				;LDR		r2,#0						;
+				;MOV		r0,r0,ASL 2
+				
+				BX		LR
 				
 ;//-------- <<< USER CODE END Free Function >>> ------------------------				
 				ENDFUNC
@@ -497,44 +505,91 @@ LinkLFull		LDR		r0,=NO_AREA					;Return no allocable area error code
 ;@return    R0 <- Error Code
 Remove			FUNCTION			
 ;//-------- <<< USER CODE BEGIN Remove Function >>> ----------------------															
-				BEQ		continueR		;if operation = Removebranch to ContinueR
-				BX		LR				;else return with lr
+				BEQ		continueR
+				BX		LR
 continueR		
 				;LDR 	R2,=DATA_MEM	;load data memory start adress to r2
 				LDR		R2,=FIRST_ELEMENT
-				LDR		R2,[R2]
+				
 				LDR		R4,=AT_MEM		;load AT memory start adress to r2
 				MOVS	R3,#0			;i value use for iteration
 				MOVS	R6,R3			;(j)it is used for iteration in byte(when r6=32 it turns 0 value)(it is for alloc table iteration)
 				ADDS	R5,#1			;it is range value(number of 1 values in allocation table)
 				
 REMOVE_S		
-				;CMP		R3,R5			;if(i==total range) it means that there is no any input like desired.
-				;BEQ		FINISHREM		
+				
+				
 				PUSH 	{R3}			
 				;LSLS 	R3,#4			;multiply r3 by 8
+				LDR		R2,[R2]
 				LDR R3,[R2]				;load input data for every iteration
+				CMP R2,#0				;it means that there is no any input like desired.
+				BEQ ERROR1
 				CMP	R0,R3				;if input==dataspace[i]
 				BEQ	REMOVAL				
 				POP {R3}
 				ADDS R3,#1				;i++
 				ADDS R6,#1				;j++
-				ADDS R2,#8				;NEXT ELEMENT
-				CMP R3,#32				;if j==32(out of 32 bit)
-				BEQ	UPBYTE				
+				ADDS R2,#4				;NEXT ELEMENT
+				;LDR R2,[R2]
+				;ADDS R4,#1
+				;CMP R3,#2				;if j==32(out of 32 bit)
+				;BEQ	UPBYTE
 				B	REMOVE_S
 
-UPBYTE			ADDS R4,#1				;alloc table adress increases 1 byte
-				MOVS R6,#0				;j value turns to 0
 
-REMOVAL			POP	{R3}
+
+				
+REMOVAL			
+				POP {R3}
+				PUSH {R1,R2,R4}
+				LDR R2,=DATA_MEM
+				MOVS R4,#0
+FINDIND			LDR  R2,[R2]
+				CMP R2,R0
+				BEQ CONT
+				ADDS R2,#8
+				ADDS R4,#1
+				CMP R0,R6
+				BEQ CONT
+				CMP R4,#2
+				BEQ UPBYTE
+				B FINDIND
+UPBYTE			ADDS R4,#1				;alloc table adress increases 1 byte
+				MOVS R3,#0				;j value turns to 0
+				B FINDIND
+
+CONT			;free()
+				MOVS R6,R4
+				POP {R1,R2,R4}
+				MOVS R1,#1
+				;MOVS R4,#3
+				;MULS R0,R4,R0
+				LSLS R1,R6
+				LDR R4,=AT_MEM
+				LDR R2,[R4]
+				SUBS R2,R1
+				STR R2,[R4]
+				;POP {R0,R1,R2}
+				
+				PUSH {R2}
+				ADDS R2,#4
+				LDR R2,[R2]
+				CMP R2,#0
+				BEQ DELLAST
+				POP {R2}
+				CMP R3,#0
+				BEQ DELFIRST
+				
 				CMP R3,#0
 				BEQ DELFIRST
 				PUSH {R6}				
 				MOVS R6,#0
 				STR R6,[R2]				;input data turns to 0
-				ADDS R3,#4
+				PUSH {R2}
+				ADDS R2,#4
 				STR R6,[R2]				;adress pointer of input data turns to 0
+				POP {R2}
 				POP {R6}
 				PUSH {R3,R4}
 				MOVS R3,R2
@@ -544,23 +599,53 @@ REMOVAL			POP	{R3}
 				STR R4,[R3]
 				POP {R3,R4}
 				
-DELFIRST		PUSH {R6}				
+				LDR R6,[R4]
+				SUBS R6,R6,#1
+				STR R6,[R4]
+				;ADDS R6,#10
+				;STR R6,[R4]
+				
+DELFIRST		PUSH {R1,R6}				
+				LDR R1,=FIRST_ELEMENT
 				MOVS R6,#0
 				STR R6,[R2]				;input data turns to 0
 				ADDS R2,#4
+				PUSH {R2}
+				LDR	 R2,[R2]
+				STR	 R2,[R1]			;UPDATE FIRST_ELEMENT
+				POP {R2}
 				STR R6,[R2]				;adress pointer of input data turns to 0
+				POP {R1,R6}
+				;ADDS R6,#10
+				;STR R6,[R4]
+				
+				;LDR R6,[R4]
+				;SUBS R6,R6,#1
+				;STR R6,[R4]
+				;MOVS	R2,#2_00000001	;byte value which is used for delete alloc table to 1 value
+				;PUSH 	{R6}			
+				;MULS	R6,R2,R6		
+				;LSLS	R2,R6			;byte value shifts until where is 1 bit value which is correspond to desired input
+				;POP		{R6}
+				;SUBS	R3,R2			;delete the 1 value
+				;STR		R3,[R4]			;save last update
+				BX		LR
+ERROR1			POP {R3}			
+				BX		LR
+
+DELLAST			POP {R2}
+				PUSH {R6}				
+				MOVS R6,#0
+				STR R6,[R2]				;input data turns to 0
+				PUSH {R2}
+				ADDS R2,#4
+				STR R6,[R2]				;adress pointer of input data turns to 0
+				POP {R2}
+							
+				;LDR R6,[R4]
+				;SUBS R6,R6,#1
+				;STR R6,[R4]
 				POP {R6}
-				
-				LDR	R3,[R4]				;load alloc table value that point desired input
-				MOVS	R2,#2_00000001	;byte value which is used for delete alloc table to 1 value
-				PUSH 	{R6}			
-				MULS	R6,R2,R6		
-				LSLS	R2,R6			;byte value shifts until where is 1 bit value which is correspond to desired input
-				POP		{R6}
-				SUBS	R3,R2			;delete the 1 value
-				STR		R3,[R4]			;save last update
-;FINISHREM		;B		RemoverEnd			
-				
 				BX		LR
 ;//-------- <<< USER CODE END Remove Function >>> ------------------------				
 				ENDFUNC
@@ -571,15 +656,15 @@ DELFIRST		PUSH {R6}
 ;@return	R0 <- Error Code
 LinkedList2Arr	FUNCTION			
 ;//-------- <<< USER CODE BEGIN Linked List To Array >>> ----------------------															
-				BEQ		continueL					;if operation = LinkedList2Arr branch to ContinueL
-				BX		LR							;else return with lr
-
+				BEQ		continueL
+				BX		LR
+				
 continueL		LDR r0, =FIRST_ELEMENT 				;r0 holds the first element in linked list
 				LDR r2, =ARRAY_MEM					;r2 holds the starting address of array
 				
-				LDR r1, [r0, #4]					;look at the address area of linked list
-				CMP r1, #0							;if the address is 0
+				CMP r0, #0							;if first_element holds 0,
 				BEQ error_5							;linked list is empty
+				LDR r0, [r0]						;go to the first element
 				
 				MOVS r3, #0							;r3 will be used for indexing in the loop
 				
@@ -608,6 +693,10 @@ transform		LDR r1, [r0]						;take the value from current position of linkedlist
 compare			LDR r1, [r0, #4]					;look at the address area of linked list
 				CMP r1, #0							;if it is not 0, it means we haven't finished linked list yet
 				BNE transform						;then go transform
+				LDR r1, [r0]						;take the value from current position of linkedlist (last element hasn't taken)
+				MOVS r4, #4							;r4 = 4
+				MULS r4, r3, r4  					;r4 *= r3
+				STR r1, [r2, r4]					;store the value to array_mem+4*i
 				
 				MOVS r0, #0							;no error, so r0 = 0
 				BX LR								;return from function
