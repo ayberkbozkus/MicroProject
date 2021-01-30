@@ -259,7 +259,7 @@ Clear_Alloc		FUNCTION
 				LDR		r0,=AT_MEM							;Load AT memory address
 				LDR		r1,=NUMBER_OF_AT					;Load number of allocation table to r1
 				MOVS	r2,#0								;assign 0 to r2 for clearing
-				;LDR		r2,=0x11111101
+				;LDR		r2,=0x11111111
 				MOVS	r3,#0								;assign 0 to r3 for counting loops(i)
 C_A_LOOP		CMP		r3,r1								;check if i>Number of allocations
 				BGE		C_A_END								;branch to end of clear allocation
@@ -356,6 +356,9 @@ LSHIFT			LSLS	r1,#4							;left shift binary by 1
 				B		CHECKBIT						;Go to CHECKBIT branch
 				
 NEXTBYTE		ADDS	r0,r0,#1						;increase r0 by 1
+				LDR		r6,=NUMBER_OF_AT				;load number of AT value in r6
+				CMP		r0,r6							;check if byte number<Number of at
+				BEQ		LL_FULL							;if byte number > Number of AT, LL is full
 				MOVS	r1,#1							;binary = 1
 				MOVS	r4,#0							;byteindex = 0
 				B		CHECKBIT						;Go to CHECKBIT branch
@@ -376,6 +379,10 @@ BITEMPTY 		PUSH 	{r0}							;push r0 to stack
 				POP		{r1,r2,r3,r4,r5}				;Pop r1,r2,r3,r4,r5 registers from stack				
 				B		MallocEnd						;Branch to MallocEnd line
 				;BX 		LR									;Return with LR
+				
+LL_FULL			MOVS	r0,#0							;assign 0 to r0 since LL is full
+				POP		{r1,r2,r3,r4,r5}				;Pop r1,r2,r3,r4,r5 registers from stack				
+				B		MallocEnd						;Branch to MallocEnd line
 				
 				
 ;//-------- <<< USER CODE END System Tick Handler >>> ------------------------				
@@ -403,7 +410,9 @@ Insert			FUNCTION
 				
 continueI		MOVS	r1,r0						;load the data to insert to r1 register
 				B		Malloc						;Get allocated area address in r0					
-MallocEnd		LDR		r2,=FIRST_ELEMENT			;load FIRST_ELEMENT address
+MallocEnd		CMP		r0,#0						;if Malloc return 0, the LL is full
+				BEQ		LinkLFull					;if LL is full branch to LLFull error
+				LDR		r2,=FIRST_ELEMENT			;load FIRST_ELEMENT address
 				LDR		r3,[r2,#0]					;load the address in FIRST_ELEMENT
 				STR		r1,[r0]						;store the data in the allocated address from malloc
 				CMP		r3,#0						;check if FIRST_ELEMENT is empty/ Linked list is empty
@@ -462,9 +471,9 @@ ADD_TO_TAIL		STR		r0,[r5]						;store new data's address in element's pointer
 				
 EQUAL_ERROR		LDR		r0,=DUPLICATE_DATA			;Return duplicate data error code 
 				BX		LR							;return with lr
-				;burada loglamaya baglanti yapilacak
 				
-				;Error code 1 icin gelistirme yap
+LinkLFull		LDR		r0,=NO_AREA					;Return no allocable area error code
+				BX		LR							;return with LR
 				
 ;//-------- <<< USER CODE END Insert Function >>> ------------------------				
 				ENDFUNC
