@@ -150,6 +150,7 @@ __LOG_END
 				ALIGN 
 __main			FUNCTION
 				EXPORT __main
+					BL	Free
 				BL	Clear_Alloc					; Call Clear Allocation Function.
 				BL  Clear_ErrorLogs				; Call Clear ErrorLogs Function.
 				BL	Init_GlobVars				; Call Initiate Global Variable Function.
@@ -407,11 +408,36 @@ LL_FULL			MOVS	r0,#0							;assign 0 to r0 since LL is full
 Free			FUNCTION			
 ;//-------- <<< USER CODE BEGIN Free Function >>> ----------------------
 				LDR		r1,=DATA_MEM				;Load the start address of the data memory
-				LDR		r0,=0x20002874
+				LDR		r0,=0x20002894
 				SUBS	r0,r0,r1					;DATA_MEM start - Address to deallocate
-				LSRS	r0,#3						;divide by 8 to get n th element
-				;LDR		r2,#0						;
-				;MOV		r0,r0,ASL 2
+				LSRS	r0,#3						;divide by 8 to get n th element, r0 = n th bit to delete
+				MOVS	r2,#1						;assign binary 1 for clearing, 0x00000001
+				MOVS	r3,#0						;use r3 as counter, initialize as 0
+				MOVS	r4,#8						;assign r4 as 8 as byte control flag 
+	
+				LDR		r1,=AT_MEM					;Load start address of AT memory
+				
+FreeLoop		CMP		r3,r0						;check if counter= n th bit(bit to clear)
+				BEQ		ClearBit					;if counter = n th bit, branch to clearBit
+				ADDS	r3,r3,#1					;increase counter by 1
+				LSLS	r2,r2,#4					;0x00000001 -> 0x00000010, left shift in base 2
+				CMP		r3,r4						;check if counter = 8
+				BEQ		FreeNextB					;if counter = 8 go to next byte in AT
+				B		FreeLoop
+				
+				
+FreeNextB		SUBS	r3,r4,r3					;Substract 8 from counter
+				SUBS	r0,r4,r0					;Substract 8 from n th bit
+				ADDS	r1,r1,#4					;Go to the next byte in AT
+				MOVS	r2,#1						;assign binary 1 for clearing, 0x00000001
+				B		FreeLoop
+				
+
+ClearBit		PUSH	{r1}						;push r1 value to stack
+				LDR		r1,[r1]						;Load the value in AT address
+				EORS	r2,r1						;XOR operation between bit clearer and AT byte
+				POP		{r1}						;get r1 value back from stack
+				STR		r2,[r1]						;store new AT byte in Allocation table
 				
 				BX		LR
 				
