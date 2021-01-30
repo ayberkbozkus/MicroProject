@@ -212,6 +212,12 @@ SysTick_Handler	FUNCTION
 SysTick_Init	FUNCTION			
 ;//-------- <<< USER CODE BEGIN System Tick Timer Initialize >>> ----------------------							
 				LDR		r0,=0xE000E010					;Load SysTick control and status register address
+				;According to the formula
+				;Period = (1 + ReloadValue)/Frequency of the cpu
+				;Our Period is 834 microsecond
+				;Frequency of the cpu is 4 MHZ
+				;834.10^(-6) = (1 + ReloadValue)/4.10^(6)
+				;Reload Value = 3336
 				LDR		r1,=3336						;Load the reload value to r1 register
 				STR 	r1,[r0,#4]						;Store reload value to reload value register
 				MOVS	r1,#0							;assign 0 to r1 register
