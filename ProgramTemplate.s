@@ -553,7 +553,7 @@ continueR
 				LDR		R4,=AT_MEM		;load AT memory start adress to r2
 				MOVS	R3,#0			;i value use for iteration
 				MOVS	R6,R3			;(j)it is used for iteration in byte(when r6=32 it turns 0 value)(it is for alloc table iteration)
-				ADDS	R5,#1			;it is range value(number of 1 values in allocation table)
+				LDR		R5,[R2]			;it is for last element deletion
 				
 REMOVE_S		
 				;CMP		R3,R5			;if(i==total range) 
@@ -561,12 +561,16 @@ REMOVE_S
 				PUSH 	{R3}			
 				;LSLS 	R3,#4			;multiply r3 by 8
 				LDR		R2,[R2]
+
 				LDR R3,[R2]				;load input data for every iteration
 				CMP R2,#0				;it means that there is no any input like desired.
 				BEQ ERROR1
 				CMP	R0,R3				;if input==dataspace[i]
 				BEQ	REMOVAL				
 				POP {R3}
+				;ADDS R5,R2
+				MOVS R5,R2
+				ADDS R5,#4
 				ADDS R3,#1				;i++
 				ADDS R6,#1				;j++
 				ADDS R2,#4				;NEXT ELEMENT
@@ -574,8 +578,14 @@ REMOVE_S
 				;ADDS R4,#1
 				B	REMOVE_S
 
-
-REMOVAL			BL	Free
+				
+REMOVAL			PUSH {R0,R1,R2,R3,R4,R5}
+				PUSH {LR}
+				MOVS R0,R2		
+				BL	Free
+				POP {R1}
+				MOV LR,R1
+				POP {R0,R1,R2,R3,R4,R5}
 				POP {R3}
 				PUSH {R2}
 				ADDS R2,#4
@@ -603,12 +613,7 @@ REMOVAL			BL	Free
 				ADDS R4,#8
 				STR R4,[R3]
 				POP {R3,R4}
-				
-				LDR R6,[R4]
-				SUBS R6,R6,#1
-				STR R6,[R4]
-				;ADDS R6,#10
-				;STR R6,[R4]
+				BX		LR
 				
 DELFIRST		PUSH {R1,R6}				
 				LDR R1,=FIRST_ELEMENT
@@ -621,20 +626,8 @@ DELFIRST		PUSH {R1,R6}
 				POP {R2}
 				STR R6,[R2]				;adress pointer of input data turns to 0
 				POP {R1,R6}
-				;ADDS R6,#10
-				;STR R6,[R4]
-				
-				;LDR R6,[R4]
-				;SUBS R6,R6,#1
-				;STR R6,[R4]
-				;MOVS	R2,#2_00000001	;byte value which is used for delete alloc table to 1 value
-				;PUSH 	{R6}			
-				;MULS	R6,R2,R6		
-				;LSLS	R2,R6			;byte value shifts until where is 1 bit value which is correspond to desired input
-				;POP		{R6}
-				;SUBS	R3,R2			;delete the 1 value
-				;STR		R3,[R4]			;save last update
 				BX		LR
+
 ERROR1			POP {R3}			
 				BX		LR
 
@@ -646,11 +639,14 @@ DELLAST			POP {R2}
 				ADDS R2,#4
 				STR R6,[R2]				;adress pointer of input data turns to 0
 				POP {R2}
-							
-				;LDR R6,[R4]
-				;SUBS R6,R6,#1
-				;STR R6,[R4]
 				POP {R6}
+				;LDR R2,=FIRST_ELEMENT
+				;LDR R2,[R2]
+				;LSLS R6,#3			
+				;ADDS R2,R6
+				;ADDS R2,#4
+				MOVS R3,#0
+				STR R3,[R5]
 				BX		LR
 ;Return with LR
 ;//-------- <<< USER CODE END Remove Function >>> ------------------------				
