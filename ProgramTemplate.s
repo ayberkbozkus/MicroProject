@@ -662,8 +662,8 @@ DELLAST			POP {R2}
 ;@return	R0 <- Error Code
 LinkedList2Arr	FUNCTION			
 ;//-------- <<< USER CODE BEGIN Linked List To Array >>> ----------------------															
-				BEQ		continueL
-				BX		LR
+				BEQ		continueL					;if operation = LinkedList2Arr branch to ContinueL
+				BX		LR							;else return with lr
 				
 continueL		LDR r0, =FIRST_ELEMENT 				;r0 holds the first element in linked list
 				LDR r2, =ARRAY_MEM					;r2 holds the starting address of array
