@@ -672,9 +672,10 @@ GetNow			FUNCTION
 				LDR		r0,=0xE000E010					;Load SysTick control and status register address
 				LDR		r0,[r0]							;Load SysTick control and status register address
 				LDR		r1,=TICK_COUNT
-				SUBS	r6,r1,r0						;save value to r6
+				LDR		r1,[r1]
+				adds	r6,r0,r1						;save value to r6
 				POP		{r0}
-				POP 	{PC} 							; Use stacked LR content to return to functionA		
+				POP 	{PC} 							; Use stacked LR content to return to functionA			
 ;//-------- <<< USER CODE END Get Now >>> ------------------------
 				ENDFUNC
 				
