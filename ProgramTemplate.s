@@ -19,13 +19,13 @@
 ;@note		The input dataset will be changed at the grading. 
 ;			Therefore, you shouldn't use the constant number size for this dataset in your code. 
 				AREA     IN_DATA_AREA, DATA, READONLY
-IN_DATA			DCD		0x10, 0x20, 0x15, 0x65, 0x25, 0x01, 0x01, 0x12, 0x65, 0x25, 0x85, 0x46, 0x10, 0x00
+IN_DATA			DCD		0x10, 0x20, 0x15, 0x65, 0x25, 0x01,  0x85, 0x46,  0x00
 END_IN_DATA
 
 ;@brief 	This data contains operation flags of input dataset. 
 ;@note		0 -> Deletion operation, 1 -> Insertion 
 				AREA     IN_DATA_FLAG_AREA, DATA, READONLY
-IN_DATA_FLAG	DCD		0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x02
+IN_DATA_FLAG	DCD		0x01, 0x01, 0x01, 0x01, 0x01, 0x01,  0x01, 0x01,  0x02
 END_IN_DATA_FLAG
 
 
@@ -496,7 +496,7 @@ MallocEnd		CMP		r0,#0						;if Malloc return 0, the LL is full
 ADD_TO_FRONT	STR		r0,[r2]						;store new data address in FIRST_ELEMENT
 				ADDS	r0,r0,#4					;add 4 to r0 to get new pointer's address
 				STR		r3,[r0]						;new pointer = FIRST_ELEMENT pointer 
-				POP		{PC}						;Return
+				BX		LR							;Return with LR
 				
 FIRST_EL		STR		r0,[r2]						;store new data address in FIRST_ELEMENT's value
 				ADDS	r0,r0,#4					;add 4 to r0 to get pointer's address
