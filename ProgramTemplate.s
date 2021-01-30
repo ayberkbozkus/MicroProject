@@ -202,15 +202,7 @@ SysTick_Handler	FUNCTION
 				BL		Remove							;Branch with link to remove function
 				CMP		r2,#TRANSFORM					;check if operation = TRANSFORM
 				BL		LinkedList2Arr					;Branch with link to LinkedList2Arr function
-				
-				;Check if all input data is read
-				;LDR		r0,=IN_DATA_AREA
-				;LDR		r1,=INDEX_INPUT_DS				;load INDEX_INPUT_DS address
-				;LDR		r1,[r1]							;load INDEX_INPUT_DS value
-				;ADDS	r0,r1
-				;LDR		r2,=IN_DATA_FLAG				;load address of input array
-				
-				
+							
 				pop		{r2}							;READ OPERATİON
 				PUSH	{r1}							;PUSH DATA
 				MOV		r1,r0							;READ ERRORCODE
