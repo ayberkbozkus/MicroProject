@@ -209,7 +209,14 @@ SysTick_Handler	FUNCTION
 				MOV		r1,r0							;READ ERRORCODE
 				POP		{r3}							;READ DATA
 				POP 	{r0}							;READ INDEX
+				
+				push 	{r2}
 				BL		WriteErrorLog
+				
+				pop 	{r2}
+				
+				CMP		r2,#TRANSFORM					;check if operation = TRANSFORM	
+				BL		SysTick_Stop
 				
 				POP		{PC}							;pop pc to exit systickhandler
 				;BX 		LR							;Return with LR
@@ -249,7 +256,12 @@ SysTick_Init	FUNCTION
 
 ;@brief 	This function will be used to stop the System Tick Timer
 SysTick_Stop	FUNCTION			
-;//-------- <<< USER CODE BEGIN System Tick Timer Stop >>> ----------------------	
+;//-------- <<< USER CODE BEGIN System Tick Timer Stop >>> ----------------------
+
+				BEQ		ContinueTickStop				;If the operation is transform branch to ContinueTickStop
+				BX 		LR								;else return with LR
+
+ContinueTickStop
 				LDR		r0,=0xE000E010					;Load SysTick control and status register address
 				MOVS	r1,#0							;set enable,clock,and interrupt flags
 				STR		r1,[r0]							;Store r1 value to SystickCSR register
@@ -671,9 +683,15 @@ GetNow			FUNCTION
 				PUSH	{r0}
 				LDR		r0,=0xE000E010					;Load SysTick control and status register address
 				LDR		r0,[r0]							;Load SysTick control and status register address
-				LDR		r1,=TICK_COUNT
+				LDR		r2,=0xE000E014					;Get SystickReloadValue	
+				LDR		r2,[r2]							;Load SysTick control and status register address				
+				LDR		r1,=TICK_COUNT	
 				LDR		r1,[r1]
-				adds	r6,r0,r1						;save value to r6
+				LDR		r3,=0xE000E018					;Get SystickCurrentValue
+				LDR		r3,[r3]							;Load SysTick control and status register address
+				MULS	r1,r3,r1						;
+				adds	r6,r2,r1						;save value to r6
+				
 				POP		{r0}
 				POP 	{PC} 							; Use stacked LR content to return to functionA			
 ;//-------- <<< USER CODE END Get Now >>> ------------------------
