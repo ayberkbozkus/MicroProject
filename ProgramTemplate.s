@@ -150,7 +150,6 @@ __LOG_END
 				ALIGN 
 __main			FUNCTION
 				EXPORT __main
-					BL	Free
 				BL	Clear_Alloc					; Call Clear Allocation Function.
 				BL  Clear_ErrorLogs				; Call Clear ErrorLogs Function.
 				BL	Init_GlobVars				; Call Initiate Global Variable Function.
@@ -408,7 +407,7 @@ LL_FULL			MOVS	r0,#0							;assign 0 to r0 since LL is full
 Free			FUNCTION			
 ;//-------- <<< USER CODE BEGIN Free Function >>> ----------------------
 				LDR		r1,=DATA_MEM				;Load the start address of the data memory
-				LDR		r0,=0x20002894
+				;LDR		r0,=0x20002894
 				SUBS	r0,r0,r1					;DATA_MEM start - Address to deallocate
 				LSRS	r0,#3						;divide by 8 to get n th element, r0 = n th bit to delete
 				MOVS	r2,#1						;assign binary 1 for clearing, 0x00000001
@@ -543,8 +542,8 @@ continueR
 				ADDS	R5,#1			;it is range value(number of 1 values in allocation table)
 				
 REMOVE_S		
-				
-				
+				;CMP		R3,R5			;if(i==total range) 
+				;BEQ		FINISHREM		
 				PUSH 	{R3}			
 				;LSLS 	R3,#4			;multiply r3 by 8
 				LDR		R2,[R2]
@@ -559,45 +558,11 @@ REMOVE_S
 				ADDS R2,#4				;NEXT ELEMENT
 				;LDR R2,[R2]
 				;ADDS R4,#1
-				;CMP R3,#2				;if j==32(out of 32 bit)
-				;BEQ	UPBYTE
 				B	REMOVE_S
 
 
-
-				
-REMOVAL			
+REMOVAL			BL	Free
 				POP {R3}
-				PUSH {R1,R2,R4}
-				LDR R2,=DATA_MEM
-				MOVS R4,#0
-FINDIND			LDR  R2,[R2]
-				CMP R2,R0
-				BEQ CONT
-				ADDS R2,#8
-				ADDS R4,#1
-				CMP R0,R6
-				BEQ CONT
-				CMP R4,#2
-				BEQ UPBYTE
-				B FINDIND
-UPBYTE			ADDS R4,#1				;alloc table adress increases 1 byte
-				MOVS R3,#0				;j value turns to 0
-				B FINDIND
-
-CONT			;free()
-				MOVS R6,R4
-				POP {R1,R2,R4}
-				MOVS R1,#1
-				;MOVS R4,#3
-				;MULS R0,R4,R0
-				LSLS R1,R6
-				LDR R4,=AT_MEM
-				LDR R2,[R4]
-				SUBS R2,R1
-				STR R2,[R4]
-				;POP {R0,R1,R2}
-				
 				PUSH {R2}
 				ADDS R2,#4
 				LDR R2,[R2]
@@ -673,6 +638,7 @@ DELLAST			POP {R2}
 				;STR R6,[R4]
 				POP {R6}
 				BX		LR
+;Return with LR
 ;//-------- <<< USER CODE END Remove Function >>> ------------------------				
 				ENDFUNC
 				
