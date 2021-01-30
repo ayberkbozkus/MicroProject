@@ -25,7 +25,7 @@ END_IN_DATA
 ;@brief 	This data contains operation flags of input dataset. 
 ;@note		0 -> Deletion operation, 1 -> Insertion 
 				AREA     IN_DATA_FLAG_AREA, DATA, READONLY
-IN_DATA_FLAG	DCD		0x01, 0x01, 0x02, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x02
+IN_DATA_FLAG	DCD		0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x00, 0x00, 0x00, 0x00, 0x01, 0x01, 0x00, 0x02
 END_IN_DATA_FLAG
 
 
@@ -201,7 +201,7 @@ SysTick_Handler	FUNCTION
 				CMP		r2,#REMOVE						;check if operation = REMOVE
 				BL		Remove							;Branch with link to remove function
 				CMP		r2,#TRANSFORM					;check if operation = TRANSFORM
-				;BL		LinkedList2Arr					;Branch with link to LinkedList2Arr function
+				BL		LinkedList2Arr					;Branch with link to LinkedList2Arr function
 				
 				
 				pop		{r2}							;READ OPERATİON
