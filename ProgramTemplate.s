@@ -741,7 +741,7 @@ WriteErrorLog	FUNCTION
 				
 				PUSH 	{LR} 								;Save LR content to stack
 				BL 		GetNow								;Call GetNow() to store timestamp in r6
-				STR		r6,[r4,r5]							;Store @param4 to Err_log
+				STR		r0,[r4,r5]							;Store @param4 to Err_log
 				ADDS	r5,r5,#4							;increase index
 				
 				LDR		r7,=INDEX_ERROR_LOG					;Load address of INDEX_ERROR_LOG
@@ -754,21 +754,17 @@ WriteErrorLog	FUNCTION
 ;@return	R0 <- Working time of the System Tick Timer (in us).			
 GetNow			FUNCTION			
 ;//-------- <<< USER CODE BEGIN Get Now >>> ----------------------															
-				PUSH 	{LR}
-				PUSH	{r0}
-				LDR		r0,=0xE000E010					;Load SysTick control and status register address
-				LDR		r0,[r0]							;Load SysTick control and status register address
-				LDR		r2,=0xE000E014					;Get SystickReloadValue	
-				LDR		r2,[r2]							;Load SysTick control and status register address				
+				;PUSH 	{LR}
+				LDR		r2,=0xE000E014					;Get SystickReloadValue address	
+				LDR		r2,[r2]							;Get value of SystickReload
 				LDR		r1,=TICK_COUNT	
 				LDR		r1,[r1]
 				LDR		r3,=0xE000E018					;Get SystickCurrentValue
 				LDR		r3,[r3]							;Load SysTick control and status register address
 				MULS	r1,r3,r1						;
-				adds	r6,r2,r1						;save value to r6
-				
-				POP		{r0}
-				POP 	{PC} 							; Use stacked LR content to return to functionA			
+				adds	r0,r2,r1						;save value to r6
+
+				BX 		LR							; Use stacked LR content to return				
 ;//-------- <<< USER CODE END Get Now >>> ------------------------
 				ENDFUNC
 				
