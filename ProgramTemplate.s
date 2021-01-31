@@ -5,11 +5,11 @@
 ;
 ;@PROJECT GROUP
 ;@Group no: 41
-;@Muhammet Dervis Kopuz 504201531
-;@Ayberk Bozkus 150160067
+;@Muhammet Derviş Kopuz 504201531
 ;@Anıl Zeybek 			150190705
 ;@Mert Kaan Gül 		150190707
-;@Dogu Can Elci 		504201516
+;@Doğu Can Elçi 		504201516
+;@Ayberk Bozkuş 		150160067
 ;*******************************************************************************
 ;*******************************************************************************
 ;@section 		INPUT_DATASET
