@@ -754,17 +754,16 @@ WriteErrorLog	FUNCTION
 ;@return	R0 <- Working time of the System Tick Timer (in us).			
 GetNow			FUNCTION			
 ;//-------- <<< USER CODE BEGIN Get Now >>> ----------------------															
-				;PUSH 	{LR}
-				LDR		r2,=0xE000E014					;Get SystickReloadValue address	
-				LDR		r2,[r2]							;Get value of SystickReload
-				LDR		r1,=TICK_COUNT	
-				LDR		r1,[r1]
-				LDR		r3,=0xE000E018					;Get SystickCurrentValue
-				LDR		r3,[r3]							;Load SysTick control and status register address
-				MULS	r1,r3,r1						;
-				adds	r0,r2,r1						;save value to r6
+				LDR		r2,=0xE000E014					;Load SystickReloadValue address	
+				LDR		r2,[r2]							;Load SystickReload to r2
+				LDR		r1,=TICK_COUNT					;Load tick count address
+				LDR		r1,[r1]							;Load tick count value to r1
+				LDR		r3,=0xE000E018					;Load SystickCurrentValue address
+				LDR		r3,[r3]							;Load SystickCurrentValue to r3
+				MULS	r1,r3,r1						;Multiply r3 with r1 and store to r1; r1 = r3 * r1
+				adds	r0,r2,r1						;Add r1 with r2 and store to r0; r0 = r1 + r2
 
-				BX 		LR							; Use stacked LR content to return				
+				BX 		LR								; Use stacked LR content to return				
 ;//-------- <<< USER CODE END Get Now >>> ------------------------
 				ENDFUNC
 				
