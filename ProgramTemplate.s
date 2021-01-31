@@ -192,6 +192,9 @@ SysTick_Handler	FUNCTION
 				LDR		r2,=IN_DATA_FLAG				;load address of input array
 				LDR		r2,[r2,r1]						;Read data flag from data_flag array
 				
+				CMP		r2,#TRANSFORM					;check if operation = TRANSFORM	
+				BL		SysTick_Stop					;branch with link to sysTick stop function
+				
 				POP		{r1}							;pop INDEX_INPUT_DS value from stack
 				PUSH	{r2}							;SAVE OPERATİON
 				PUSH	{r0}							;SAVE DATA
@@ -208,12 +211,9 @@ SysTick_Handler	FUNCTION
 				POP		{r2}							;READ OPERATİON
 				MOV		r1,r0							;READ ERRORCODE
 				POP 	{r0}							;READ INDEX
-				push 	{r2}							;push r2 register to stack
 				BL		WriteErrorLog					;branch with link to write error log function
 				
-				POP 	{r2}							 ;get r2 value back from stack
-				CMP		r2,#TRANSFORM					;check if operation = TRANSFORM	
-				BL		SysTick_Stop					;branch with link to sysTick stop function
+
 				
 				POP		{PC}							;pop pc to exit systickhandler
 ;//-------- <<< USER CODE END System Tick Handler >>> ------------------------				
