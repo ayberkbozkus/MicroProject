@@ -487,7 +487,7 @@ MallocEnd		CMP		r0,#0						;if Malloc return 0, the LL is full
 
 ADD_TO_FRONT	STR		r0,[r2]						;store new data address in FIRST_ELEMENT
 				ADDS	r0,r0,#4					;add 4 to r0 to get new pointer's address
-				STR		r3,[r0]						;new pointer = FIRST_ELEMENT pointer 
+				STR		r3,[r0]						;new pointer = old FIRST_ELEMENT's address 
 				BX		LR							;Return with LR
 				
 FIRST_EL		STR		r0,[r2]						;store new data address in FIRST_ELEMENT's value
@@ -547,108 +547,98 @@ Remove			FUNCTION
 				BEQ		continueR
 				BX		LR
 continueR		
-				;LDR 	R2,=DATA_MEM	;load data memory start adress to r2
-				LDR		R2,=FIRST_ELEMENT
+				LDR		R2,=FIRST_ELEMENT ;load the adress of first_element value in r2 register
 				
 				LDR		R4,=AT_MEM		;load AT memory start adress to r2
 				MOVS	R3,#0			;i value use for iteration
-				MOVS	R6,R3			;(j)it is used for iteration in byte(when r6=32 it turns 0 value)(it is for alloc table iteration)
-				LDR		R5,[R2]			;it is for last element deletion
-				
-REMOVE_S		
-				;CMP		R3,R5			;if(i==total range) 
-				;BEQ		FINISHREM		
-				PUSH 	{R3}			
-				;LSLS 	R3,#4			;multiply r3 by 8
+				LDR		R5,[R2]			;if current input is the last element of the linkedlist, r5 register stores pointer adress of second last element to assign NULL							
+				PUSH	{R2}
 				LDR		R2,[R2]
-
-				LDR R3,[R2]				;load input data for every iteration
+				LDR		R2,[R2]			;load to first value of the linkedlist for testing if it is empty of not
+				CMP 	R2,#0			;it means that there is no any element in the linkedlist
+				BEQ		ERROR2			;branch to LL_EMPTY ERROR
+				POP		{R2}
+REMOVE_S				
+				PUSH 	{R3}			
+				LDR		R2,[R2]			;load to first element adress of linkedlist in r2
+				LDR R3,[R2]				;load next input data from linked list
 				CMP R2,#0				;it means that there is no any input like desired.
-				BEQ ERROR1
-				CMP	R0,R3				;if input==dataspace[i]
+				BEQ ERROR1				;branch to NO_ELEMENT error
+				
+				CMP	R0,R3				;if input==linkedlist[i]
 				BEQ	REMOVAL				
 				POP {R3}
-				;ADDS R5,R2
-				MOVS R5,R2
+				MOVS R5,R2				;R5 is used to store pointer adress of the second last element of the linkedlist
 				ADDS R5,#4
 				ADDS R3,#1				;i++
-				ADDS R6,#1				;j++
 				ADDS R2,#4				;NEXT ELEMENT
-				;LDR R2,[R2]
-				;ADDS R4,#1
 				B	REMOVE_S
-
 				
 REMOVAL			PUSH {R0,R1,R2,R3,R4,R5}
 				PUSH {LR}
-				MOVS R0,R2		
-				BL	Free
+				MOVS R0,R2		;copy adress of current linkedlist element that is selected for removing , it is an argument for Free function.
+				BL	Free		;branch to free function
 				POP {R1}
 				MOV LR,R1
 				POP {R0,R1,R2,R3,R4,R5}
 				POP {R3}
 				PUSH {R2}
-				ADDS R2,#4
-				LDR R2,[R2]
-				CMP R2,#0
-				BEQ DELLAST
+				ADDS R2,#4		;pointer adress of the current input
+				LDR R2,[R2]		;load to pointer adress of the last element of the linkedlist in r2
+				CMP R2,#0		;if pointer adress of the last element equals to NULL,go to branch
+				BEQ DELLAST		;branch to if current input is the last element of the linkedlist
 				POP {R2}
-				CMP R3,#0
-				BEQ DELFIRST
+				CMP R3,#0		;if i=0 it means that current input is the first element of the linkedlist
+				BEQ DELFIRST	;branch to if current input is the first element of the linkedlist
 				
 				CMP R3,#0
-				BEQ DELFIRST
-				PUSH {R6}				
+				BEQ DELFIRST	;branch to if current input is the first element of the linkedlist				
 				MOVS R6,#0
-				STR R6,[R2]				;input data turns to 0
+				STR R6,[R2]		;input data assign as 0 in data memory space
 				PUSH {R2}
-				ADDS R2,#4
-				STR R6,[R2]				;adress pointer of input data turns to 0
+				ADDS R2,#4		;r2 stores pointer of current element
+				PUSH {R1}
+				LDR R1,[R2]		;load to next element's adress in R1
+				STR R6,[R2]		;pointer of the input data assign as 0 in data memory space
 				POP {R2}
-				POP {R6}
-				PUSH {R3,R4}
-				MOVS R3,R2
-				MOVS R4,R2
-				SUBS R3,#4
-				ADDS R4,#8
-				STR R4,[R3]
-				POP {R3,R4}
-				BX		LR
+				STR	R1,[R5]		;connection of pointer of previous element and next element.
+				POP {R1}					
+				LDR R0,=NO_ERROR		;move to NO_ERROR VALUE in R0
+				BX		LR		;return with LR
 				
 DELFIRST		PUSH {R1,R6}				
 				LDR R1,=FIRST_ELEMENT
 				MOVS R6,#0
 				STR R6,[R2]				;input data turns to 0
-				ADDS R2,#4
+				ADDS R2,#4				;R2 stores the next element adress of the linkedlist (next element is current head node)
 				PUSH {R2}
-				LDR	 R2,[R2]
-				STR	 R2,[R1]			;UPDATE FIRST_ELEMENT
+				LDR	 R2,[R2]			;load to adress of the first element of the linkedlist in R2
+				STR	 R2,[R1]			;UPDATE FIRST_ELEMENT(change the head node of the linkedlist)
 				POP {R2}
 				STR R6,[R2]				;adress pointer of input data turns to 0
 				POP {R1,R6}
-				BX		LR
+				LDR R0,=NO_ERROR		;move to NO_ERROR VALUE in R0
+				BX		LR				;return with LR
 
-ERROR1			POP {R3}			
-				BX		LR
+ERROR1			LDR R0,=NO_ELEMENT
+				POP {R3}			
+				BX		LR				;return with LR
 
-DELLAST			POP {R2}
-				PUSH {R6}				
-				MOVS R6,#0
-				STR R6,[R2]				;input data turns to 0
+DELLAST			POP {R2}				
+				MOVS R6,#0				;Move 0 value in R6
+				STR R6,[R2]				;current element assign as 0
 				PUSH {R2}
-				ADDS R2,#4
-				STR R6,[R2]				;adress pointer of input data turns to 0
+				ADDS R2,#4				;R2 stores pointer of current element
+				STR R6,[R2]				;pointer of current element turns to 0
 				POP {R2}
-				POP {R6}
-				;LDR R2,=FIRST_ELEMENT
-				;LDR R2,[R2]
-				;LSLS R6,#3			
-				;ADDS R2,R6
-				;ADDS R2,#4
 				MOVS R3,#0
 				STR R3,[R5]
-				BX		LR
-;Return with LR
+				LDR R0,=NO_ERROR		;move to NO_ERROR VALUE in R0
+				BX		LR				;return with LR
+
+ERROR2			LDR R0,=LL_EMPTY		;load to LL_EMPTY VALUE in R0
+				POP {R2}
+				BX		LR				;return with LR
 ;//-------- <<< USER CODE END Remove Function >>> ------------------------				
 				ENDFUNC
 				
