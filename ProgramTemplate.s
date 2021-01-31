@@ -485,6 +485,7 @@ MallocEnd		CMP		r0,#0						;if Malloc return 0, the LL is full
 ADD_TO_FRONT	STR		r0,[r2]						;store new data address in FIRST_ELEMENT
 				ADDS	r0,r0,#4					;add 4 to r0 to get new pointer's address
 				STR		r3,[r0]						;new pointer = old FIRST_ELEMENT's address 
+				LDR		r0,=NO_ERROR				;Return no error error code 
 				BX		LR							;Return with LR
 				
 FIRST_EL		STR		r0,[r2]						;store new data address in FIRST_ELEMENT's value
