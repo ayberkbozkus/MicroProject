@@ -6,10 +6,10 @@
 ;@PROJECT GROUP
 ;@Group no: 41
 ;@Muhammet Dervis Kopuz 504201531
-;@Ayberk Bozkus 150160067
-;@member3
-;@member4
-;@member5
+;@Anıl Zeybek 			150190705
+;@Mert Kaan Gül 		150190707
+;@Dogu Can Elci 		504201516
+;@Ayberk Bozkuş 		150160067
 ;*******************************************************************************
 ;*******************************************************************************
 ;@section 		INPUT_DATASET
@@ -174,7 +174,7 @@ STOP			B	STOP						; Infinite loop.
 SysTick_Handler	FUNCTION			
 ;//-------- <<< USER CODE BEGIN System Tick Handler >>> ----------------------	
 				EXPORT	SysTick_Handler
-				PUSH	{LR}
+				PUSH	{LR}							;Push LR to stack
 				;increase tick count
 				LDR		r0,=TICK_COUNT					;load tick count address
 				LDR		r1,[r0]							;load tick count value to r1
@@ -209,13 +209,13 @@ SysTick_Handler	FUNCTION
 				POP		{r3}							;READ DATA
 				POP 	{r0}							;READ INDEX
 				
-				push 	{r2}
-				BL		WriteErrorLog
+				push 	{r2}							;push r2 register to stack
+				BL		WriteErrorLog					;branch with link to write error log function
 				
-				pop 	{r2}
+				pop 	{r2}							;get r2 value back from stack
 				
 				CMP		r2,#TRANSFORM					;check if operation = TRANSFORM	
-				BL		SysTick_Stop
+				BL		SysTick_Stop					;branch with link to sysTick stop function
 				
 				POP		{PC}							;pop pc to exit systickhandler
 ;//-------- <<< USER CODE END System Tick Handler >>> ------------------------				
@@ -285,7 +285,6 @@ Clear_Alloc		FUNCTION
 				LDR		r0,=AT_MEM							;Load AT memory address
 				LDR		r1,=NUMBER_OF_AT					;Load number of allocation table to r1
 				MOVS	r2,#0								;assign 0 to r2 for clearing
-				;LDR		r2,=0x11111111
 				MOVS	r3,#0								;assign 0 to r3 for counting loops(i)
 C_A_LOOP		CMP		r3,r1								;check if i>Number of allocations
 				BGE		C_A_END								;branch to end of clear allocation
@@ -404,7 +403,6 @@ BITEMPTY 		PUSH 	{r0}							;push r0 to stack
 				
 				POP		{r1,r2,r3,r4,r5}				;Pop r1,r2,r3,r4,r5 registers from stack				
 				B		MallocEnd						;Branch to MallocEnd line
-				;BX 		LR									;Return with LR
 				
 LL_FULL			MOVS	r0,#0							;assign 0 to r0 since LL is full
 				POP		{r1,r2,r3,r4,r5}				;Pop r1,r2,r3,r4,r5 registers from stack				
@@ -421,7 +419,6 @@ LL_FULL			MOVS	r0,#0							;assign 0 to r0 since LL is full
 Free			FUNCTION			
 ;//-------- <<< USER CODE BEGIN Free Function >>> ----------------------
 				LDR		r1,=DATA_MEM				;Load the start address of the data memory
-				;LDR		r0,=0x20002894
 				SUBS	r0,r0,r1					;DATA_MEM start - Address to deallocate
 				LSRS	r0,#3						;divide by 8 to get n th element, r0 = n th bit to delete
 				MOVS	r2,#1						;assign binary 1 for clearing, 0x00000001
@@ -443,7 +440,7 @@ FreeNextB		SUBS	r3,r4,r3					;Substract 8 from counter
 				SUBS	r0,r4,r0					;Substract 8 from n th bit
 				ADDS	r1,r1,#4					;Go to the next byte in AT
 				MOVS	r2,#1						;assign binary 1 for clearing, 0x00000001
-				B		FreeLoop
+				B		FreeLoop					;branch to loop and continue searching
 				
 
 ClearBit		PUSH	{r1}						;push r1 value to stack
@@ -452,7 +449,7 @@ ClearBit		PUSH	{r1}						;push r1 value to stack
 				POP		{r1}						;get r1 value back from stack
 				STR		r2,[r1]						;store new AT byte in Allocation table
 				
-				BX		LR
+				BX		LR							;Return with LR
 				
 ;//-------- <<< USER CODE END Free Function >>> ------------------------				
 				ENDFUNC
@@ -544,100 +541,100 @@ LinkLFull		LDR		r0,=NO_AREA					;Return no allocable area error code
 ;@return    R0 <- Error Code
 Remove			FUNCTION			
 ;//-------- <<< USER CODE BEGIN Remove Function >>> ----------------------															
-				BEQ		continueR
-				BX		LR
+				BEQ		continueR			;If the operation is remove branch to ContinueR
+				BX		LR					;else return with LR
 continueR		
 				LDR		R2,=FIRST_ELEMENT ;load the adress of first_element value in r2 register
 				
 				LDR		R4,=AT_MEM		;load AT memory start adress to r2
 				MOVS	R3,#0			;i value use for iteration
 				LDR		R5,[R2]			;if current input is the last element of the linkedlist, r5 register stores pointer adress of second last element to assign NULL							
-				PUSH	{R2}
-				LDR		R2,[R2]
+				PUSH	{R2}			;push r3 to stack for later use
+				LDR		R2,[R2]			;load the value in r2 address
 				LDR		R2,[R2]			;load to first value of the linkedlist for testing if it is empty of not
 				CMP 	R2,#0			;it means that there is no any element in the linkedlist
 				BEQ		ERROR2			;branch to LL_EMPTY ERROR
-				POP		{R2}
+				POP		{R2}			;get r2 value back from stack
 REMOVE_S				
-				PUSH 	{R3}			
+				PUSH 	{R3}			;push r3 to stack for later use
 				LDR		R2,[R2]			;load to first element adress of linkedlist in r2
 				LDR R3,[R2]				;load next input data from linked list
 				CMP R2,#0				;it means that there is no any input like desired.
 				BEQ ERROR1				;branch to NO_ELEMENT error
 				
 				CMP	R0,R3				;if input==linkedlist[i]
-				BEQ	REMOVAL				
-				POP {R3}
+				BEQ	REMOVAL				;if equals branch to Removal
+				POP {R3}				;get r3 value back from stack
 				MOVS R5,R2				;R5 is used to store pointer adress of the second last element of the linkedlist
-				ADDS R5,#4
+				ADDS R5,#4				;increase r5 register by 4 to get next byte
 				ADDS R3,#1				;i++
 				ADDS R2,#4				;NEXT ELEMENT
 				B	REMOVE_S
 				
-REMOVAL			PUSH {R0,R1,R2,R3,R4,R5}
-				PUSH {LR}
+REMOVAL			PUSH {R0,R1,R2,R3,R4,R5}	;push registers to stack because they will change
+				PUSH {LR}					;push LR to stack
 				MOVS R0,R2		;copy adress of current linkedlist element that is selected for removing , it is an argument for Free function.
 				BL	Free		;branch to free function
-				POP {R1}
-				MOV LR,R1
-				POP {R0,R1,R2,R3,R4,R5}
-				POP {R3}
-				PUSH {R2}
+				POP {R1}					;get r1 back from stack
+				MOV LR,R1					;load r1 value in to LR	
+				POP {R0,R1,R2,R3,R4,R5}		;get register values back from stack
+				POP {R3}					;get r3 back from stack	
+				PUSH {R2}					;push r2 register to stack for later use
 				ADDS R2,#4		;pointer adress of the current input
 				LDR R2,[R2]		;load to pointer adress of the last element of the linkedlist in r2
 				CMP R2,#0		;if pointer adress of the last element equals to NULL,go to branch
 				BEQ DELLAST		;branch to if current input is the last element of the linkedlist
-				POP {R2}
+				POP {R2}		;get r2 register back from stack
 				CMP R3,#0		;if i=0 it means that current input is the first element of the linkedlist
 				BEQ DELFIRST	;branch to if current input is the first element of the linkedlist
 				
-				CMP R3,#0
+				CMP R3,#0		;check if it is equal to zero
 				BEQ DELFIRST	;branch to if current input is the first element of the linkedlist				
-				MOVS R6,#0
+				MOVS R6,#0		;assing 0 to r6 register
 				STR R6,[R2]		;input data assign as 0 in data memory space
-				PUSH {R2}
+				PUSH {R2}		;push r2 register to stack
 				ADDS R2,#4		;r2 stores pointer of current element
-				PUSH {R1}
+				PUSH {R1}		;get r1 value back from stack
 				LDR R1,[R2]		;load to next element's adress in R1
 				STR R6,[R2]		;pointer of the input data assign as 0 in data memory space
-				POP {R2}
+				POP {R2}		;get r2 value back from stack
 				STR	R1,[R5]		;connection of pointer of previous element and next element.
-				POP {R1}					
+				POP {R1}		;get r1 value back from stack					
 				LDR R0,=NO_ERROR		;move to NO_ERROR VALUE in R0
 				BX		LR		;return with LR
 				
-DELFIRST		PUSH {R1,R6}				
-				LDR R1,=FIRST_ELEMENT
-				MOVS R6,#0
+DELFIRST		PUSH {R1,R6}			;push r1 and r6 to stack for later use	
+				LDR R1,=FIRST_ELEMENT	;load the address of the first element
+				MOVS R6,#0				;assign 0 to r6 register
 				STR R6,[R2]				;input data turns to 0
 				ADDS R2,#4				;R2 stores the next element adress of the linkedlist (next element is current head node)
-				PUSH {R2}
+				PUSH {R2}				;push r2 value to stack
 				LDR	 R2,[R2]			;load to adress of the first element of the linkedlist in R2
 				STR	 R2,[R1]			;UPDATE FIRST_ELEMENT(change the head node of the linkedlist)
-				POP {R2}
+				POP {R2}				;get r2 value back from stack
 				STR R6,[R2]				;adress pointer of input data turns to 0
-				POP {R1,R6}
+				POP {R1,R6}				;get r1 and r6 registers back from stack
 				LDR R0,=NO_ERROR		;move to NO_ERROR VALUE in R0
 				BX		LR				;return with LR
 
-ERROR1			LDR R0,=NO_ELEMENT
-				POP {R3}			
+ERROR1			LDR R0,=NO_ELEMENT		;load return register with NO_ELEMENT error code
+				POP {R3}				;get r3 value back from stack
 				BX		LR				;return with LR
 
-DELLAST			POP {R2}				
+DELLAST			POP {R2}				;get r2 value back from stack
 				MOVS R6,#0				;Move 0 value in R6
 				STR R6,[R2]				;current element assign as 0
-				PUSH {R2}
+				PUSH {R2}				;push r2 value to stack for later use
 				ADDS R2,#4				;R2 stores pointer of current element
 				STR R6,[R2]				;pointer of current element turns to 0
-				POP {R2}
-				MOVS R3,#0
-				STR R3,[R5]
+				POP {R2}				;get r2 value back from stack
+				MOVS R3,#0				;assign 0 to r3 register
+				STR R3,[R5]				;store the 0 in its new address
 				LDR R0,=NO_ERROR		;move to NO_ERROR VALUE in R0
 				BX		LR				;return with LR
 
 ERROR2			LDR R0,=LL_EMPTY		;load to LL_EMPTY VALUE in R0
-				POP {R2}
+				POP {R2}				;get r2 register back from stack
 				BX		LR				;return with LR
 ;//-------- <<< USER CODE END Remove Function >>> ------------------------				
 				ENDFUNC
@@ -711,13 +708,6 @@ WriteErrorLog	FUNCTION
 ;//-------- <<< USER CODE BEGIN Write Error Log >>> ----------------------
 				LDR		r4,=LOG_MEM							;Load log memory address
 				
-				;Bu kisim parametrelerin kaydedilmesini test etmek amaçli yazildi ileride silinecek
-				;LDR		r0,=0x55FF							;Temp value to store
-				;LDR		r1,=0x7EF							;Temp value to store
-				;LDR		r2,=0x5F							;Temp value to store
-				;LDR		r3,=0x1AC							;Temp value to store
-				;silinecek test kisminin sonu
-				
 				LDR		r5,=INDEX_ERROR_LOG					;Load address of INDEX_ERROR_LOG
 				LDR		r5,[r5]								;Load value of INDEX_ERROR_LOG
 				STR		r0,[r4,r5]							;Store @param0 to Err_log
@@ -744,20 +734,20 @@ WriteErrorLog	FUNCTION
 ;@return	R0 <- Working time of the System Tick Timer (in us).			
 GetNow			FUNCTION			
 ;//-------- <<< USER CODE BEGIN Get Now >>> ----------------------															
-				PUSH 	{LR}
-				PUSH	{r0}
+				PUSH 	{LR}							;push Lr to stack
+				PUSH	{r0}							;push the value in r0 to stack
 				LDR		r0,=0xE000E010					;Load SysTick control and status register address
 				LDR		r0,[r0]							;Load SysTick control and status register address
 				LDR		r2,=0xE000E014					;Get SystickReloadValue	
 				LDR		r2,[r2]							;Load SysTick control and status register address				
-				LDR		r1,=TICK_COUNT	
-				LDR		r1,[r1]
+				LDR		r1,=TICK_COUNT					;load TICK_COUNT address
+				LDR		r1,[r1]							;load tick count value
 				LDR		r3,=0xE000E018					;Get SystickCurrentValue
 				LDR		r3,[r3]							;Load SysTick control and status register address
-				MULS	r1,r3,r1						;
-				adds	r6,r2,r1						;save value to r6
+				MULS	r1,r3,r1						;Multiply tick count with current value register
+				adds	r6,r2,r1						;add reload period and save value to r6
 				
-				POP		{r0}
+				POP		{r0}							;get r0 back from stack
 				POP 	{PC} 							; Use stacked LR content to return to functionA			
 ;//-------- <<< USER CODE END Get Now >>> ------------------------
 				ENDFUNC
