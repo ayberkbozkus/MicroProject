@@ -10,7 +10,6 @@
 ;@Anıl Zeybek 			150190705
 ;@Mert Kaan Gül 		150190707
 ;@Dogu Can Elci 		504201516
-;@Ayberk Bozkuş 		150160067
 ;*******************************************************************************
 ;*******************************************************************************
 ;@section 		INPUT_DATASET
@@ -206,13 +205,13 @@ SysTick_Handler	FUNCTION
 				BL		LinkedList2Arr					;Branch with link to LinkedList2Arr function
 				
 				POP		{r3}							;READ DATA
-				pop		{r2}							;READ OPERATİON
+				POP		{r2}							;READ OPERATİON
 				MOV		r1,r0							;READ ERRORCODE
 				POP 	{r0}							;READ INDEX
 				push 	{r2}							;push r2 register to stack
 				BL		WriteErrorLog					;branch with link to write error log function
 				
-				pop 	{r2}							;get r2 value back from stack
+				POP 	{r2}							 ;get r2 value back from stack
 				CMP		r2,#TRANSFORM					;check if operation = TRANSFORM	
 				BL		SysTick_Stop					;branch with link to sysTick stop function
 				
@@ -743,7 +742,7 @@ GetNow			FUNCTION
 				MULS	r1,r3,r1						;Multiply r3 with r1 and store to r1; r1 = r3 * r1
 				adds	r0,r2,r1						;Add r1 with r2 and store to r0; r0 = r1 + r2
 
-				BX 		LR								; Use stacked LR content to return				
+				BX 		LR								; Use stacked LR content to return	
 ;//-------- <<< USER CODE END Get Now >>> ------------------------
 				ENDFUNC
 				
