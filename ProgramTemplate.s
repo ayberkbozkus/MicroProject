@@ -194,6 +194,7 @@ SysTick_Handler	FUNCTION
 				
 				POP		{r1}							;pop INDEX_INPUT_DS value from stack
 				PUSH	{r2}							;SAVE OPERATİON
+				PUSH	{r0}							;SAVE DATA
 				ADDS	r1,r1,#1						;increase INDEX_INPUT_DS value by one
 				STR		r1,[r3]							;store new INDEX_INPUT_DS value
 				CMP		r2,#INSERT						;check if operation = INSERT
@@ -202,18 +203,15 @@ SysTick_Handler	FUNCTION
 				BL		Remove							;Branch with link to remove function
 				CMP		r2,#TRANSFORM					;check if operation = TRANSFORM
 				BL		LinkedList2Arr					;Branch with link to LinkedList2Arr function
-							
-				pop		{r2}							;READ OPERATİON
-				PUSH	{r1}							;PUSH DATA
-				MOV		r1,r0							;READ ERRORCODE
-				POP		{r3}							;READ DATA
-				POP 	{r0}							;READ INDEX
 				
+				POP		{r3}							;READ DATA
+				POP		{r2}							;READ OPERATİON
+				MOV		r1,r0							;READ ERRORCODE
+				POP 	{r0}							;READ INDEX
 				push 	{r2}							;push r2 register to stack
 				BL		WriteErrorLog					;branch with link to write error log function
 				
-				pop 	{r2}							;get r2 value back from stack
-				
+				POP 	{r2}							 ;get r2 value back from stack
 				CMP		r2,#TRANSFORM					;check if operation = TRANSFORM	
 				BL		SysTick_Stop					;branch with link to sysTick stop function
 				
@@ -708,21 +706,21 @@ error_5			MOVS r0, #5							;error, so r0 = 5
 WriteErrorLog	FUNCTION			
 ;//-------- <<< USER CODE BEGIN Write Error Log >>> ----------------------
 				LDR		r4,=LOG_MEM							;Load log memory address
-				
 				LDR		r5,=INDEX_ERROR_LOG					;Load address of INDEX_ERROR_LOG
 				LDR		r5,[r5]								;Load value of INDEX_ERROR_LOG
-				STR		r0,[r4,r5]							;Store @param0 to Err_log
-				ADDS	r5,r5,#4							;increase index
-				STR		r1,[r4,r5]							;Store @param1 to Err_log
-				ADDS	r5,r5,#4							;increase index
-				STR		r2,[r4,r5]							;Store @param2 to Err_log
-				ADDS	r5,r5,#4							;increase index
-				STR		r3,[r4,r5]							;Store @param3 to Err_log
-				ADDS	r5,r5,#4							;increase index
+	
+				LSLS	r0,r0,#8							;Left shift r0 by 1 byte
+				ORRS	r0, r1,r0							;Bitwise or r0 and r1 so we can store them into 1 cell
+				LSLS	r0,r0,#8							;Left shift r0 by 1 byte
+				ORRS	r0, r2,r0							;Bitwise or r0 and r2 so we can store them into 1 cell
 				
+				STR		r0,[r4,r5]							;Store @param0,@param1,@param2 to Err_log cell 1
+				ADDS	r5,r5,#4							;increase index by 1
+				STR		r3,[r4,r5]							;Store @param3 to Err_log
+				ADDS	r5,r5,#4							;increase index by 1	
 				PUSH 	{LR} 								;Save LR content to stack
 				BL 		GetNow								;Call GetNow() to store timestamp in r6
-				STR		r6,[r4,r5]							;Store @param4 to Err_log
+				STR		r0,[r4,r5]							;Store @param4 to Err_log
 				ADDS	r5,r5,#4							;increase index
 				
 				LDR		r7,=INDEX_ERROR_LOG					;Load address of INDEX_ERROR_LOG
@@ -735,21 +733,16 @@ WriteErrorLog	FUNCTION
 ;@return	R0 <- Working time of the System Tick Timer (in us).			
 GetNow			FUNCTION			
 ;//-------- <<< USER CODE BEGIN Get Now >>> ----------------------															
-				PUSH 	{LR}							;push Lr to stack
-				PUSH	{r0}							;push the value in r0 to stack
-				LDR		r0,=0xE000E010					;Load SysTick control and status register address
-				LDR		r0,[r0]							;Load SysTick control and status register address
-				LDR		r2,=0xE000E014					;Get SystickReloadValue	
-				LDR		r2,[r2]							;Load SysTick control and status register address				
-				LDR		r1,=TICK_COUNT					;load TICK_COUNT address
-				LDR		r1,[r1]							;load tick count value
-				LDR		r3,=0xE000E018					;Get SystickCurrentValue
-				LDR		r3,[r3]							;Load SysTick control and status register address
-				MULS	r1,r3,r1						;Multiply tick count with current value register
-				adds	r6,r2,r1						;add reload period and save value to r6
-				
-				POP		{r0}							;get r0 back from stack
-				POP 	{PC} 							; Use stacked LR content to return to functionA			
+				LDR		r2,=0xE000E014					;Load SystickReloadValue address	
+				LDR		r2,[r2]							;Load SystickReload to r2
+				LDR		r1,=TICK_COUNT					;Load tick count address
+				LDR		r1,[r1]							;Load tick count value to r1
+				LDR		r3,=0xE000E018					;Load SystickCurrentValue address
+				LDR		r3,[r3]							;Load SystickCurrentValue to r3
+				MULS	r1,r3,r1						;Multiply r3 with r1 and store to r1; r1 = r3 * r1
+				adds	r0,r2,r1						;Add r1 with r2 and store to r0; r0 = r1 + r2
+
+				BX 		LR								; Use stacked LR content to return	
 ;//-------- <<< USER CODE END Get Now >>> ------------------------
 				ENDFUNC
 				
@@ -768,5 +761,4 @@ GetNow			FUNCTION
 				
 ;*******************************************************************************
 ;@endfile 			main.s
-;*******************************************************************************				
-
+;*******************************************************************************
